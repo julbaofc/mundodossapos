@@ -1,0 +1,182 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+// minimal ERC20 interface; we will call safely via low-level
+interface IERC20Like {
+    function transfer(address to, uint256 v) external returns (bool);
+    function transferFrom(address f, address t, uint256 v) external returns (bool);
+}
+
+// chainlink-like price feed
+interface IFeed {
+    function latestRoundData() external view returns(uint80,int256,uint256,uint256,uint80);
+    function decimals() external view returns(uint8);
+}
+
+contract SapoItemsMarket {
+    // ctrl bits: [0..159]=owner,[248]=lock,[249]=paused]
+    uint256 private ctrl;
+
+    address public immutable sapoToken;
+    address public immutable feeRecipient;
+    IFeed   public immutable feedPrimary;
+    IFeed   public immutable feedBackup;
+
+    uint16 private _feeBps; // marketplace fee in bps, <= 10000
+    uint256 public constant SAPO_PER_USD = 10_000;
+
+    mapping(uint256 => mapping(address => uint32)) private _bal; // itemId => owner => qty
+    mapping(uint256 => uint256) private _list; // packed listing: [seller(160)|priceUsd8(64)|qty(32)]
+
+    event TransferSingle(address indexed op, address indexed from, address indexed to, uint256 id, uint256 val);
+    event ItemListed(address indexed seller, uint256 indexed id, uint32 qty, uint64 priceUsd8);
+    event ItemPurchased(address indexed buyer, uint256 indexed id, uint32 qty, uint256 usd8, bytes4 ccy);
+    event FeeBpsChanged(uint16 oldBps, uint16 newBps);
+    event Paused(address by);
+    event Unpaused(address by);
+    event ReceivedETH(address indexed sender, uint256 amount);
+
+    modifier onlyOwner()    { require(msg.sender == owner(), "auth"); _; }
+    modifier nonReentrant() { require(!_locked(), "reent"); _setLock(true); _; _setLock(false); }
+    modifier whenNotPaused(){ require(!_paused(), "ps"); _; }
+
+    constructor(address sapo_, address feeRec_, address feed1_, address feed2_, uint16 bps_) {
+        require(sapo_ != address(0) && feeRec_ != address(0) && feed1_ != address(0) && feed2_ != address(0), "0");
+        require(bps_ <= 10_000, "max");
+        ctrl = uint256(uint160(msg.sender));
+        sapoToken   = sapo_;
+        feeRecipient= feeRec_;
+        feedPrimary = IFeed(feed1_);
+        feedBackup  = IFeed(feed2_);
+        require(feedPrimary.decimals() == 8 && feedBackup.decimals() == 8, "fd");
+        _feeBps = bps_;
+    }
+
+    // fee admin
+    function feeBps() external view returns (uint16) { return _feeBps; }
+    function setFeeBps(uint16 bps) external onlyOwner {
+        require(bps <= 10_000, "max");
+        uint16 o = _feeBps; _feeBps = bps;
+        emit FeeBpsChanged(o, bps);
+    }
+
+    // price feed: primary with backup fallback
+    function polUsdPrice8() public view returns (uint256) {
+        (,int256 p,,,) = feedPrimary.latestRoundData();
+        if (p > 0) return uint256(p);
+        (,p,,,) = feedBackup.latestRoundData();
+        require(p > 0, "no-feed");
+        return uint256(p);
+    }
+
+    // mint/balance transfer for items
+    function award(address to, uint256 id, uint32 amt) external onlyOwner nonReentrant whenNotPaused {
+        require(to != address(0) && amt > 0, "in");
+        _bal[id][to] += amt;
+        emit TransferSingle(msg.sender, address(0), to, id, amt);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 id, uint32 amt) external nonReentrant whenNotPaused {
+        require(from == msg.sender && to != address(0), "in");
+        uint32 b = _bal[id][from];
+        require(b >= amt, "bal");
+        unchecked { _bal[id][from] = b - amt; _bal[id][to] += amt; }
+        emit TransferSingle(msg.sender, from, to, id, amt);
+    }
+
+    // listing: lock stock into contract and set price
+    function listItem(uint256 id, uint32 qty, uint64 priceUsd8) external nonReentrant whenNotPaused {
+        require(qty > 0 && priceUsd8 > 0, "in");
+        uint32 b = _bal[id][msg.sender];
+        require(b >= qty, "bal");
+        unchecked { _bal[id][msg.sender] = b - qty; _bal[id][address(this)] += qty; }
+        _list[id] = (uint256(uint160(msg.sender)) << 96) | (uint256(priceUsd8) << 32) | uint256(qty);
+        emit ItemListed(msg.sender, id, qty, priceUsd8);
+    }
+
+    // buy with SAPO
+    function buyWithSAPO(uint256 id, uint32 q) external nonReentrant whenNotPaused {
+        (address s, uint64 p, uint32 st) = _unpack(_list[id]);
+        require(q > 0 && q <= st, "q");
+        uint256 usd8      = uint256(p) * q;
+        uint256 priceSapo = (usd8 * SAPO_PER_USD) / 1e8;
+        uint256 fee       = (priceSapo * _feeBps) / 10_000;
+
+        _safeTransferFrom(sapoToken, msg.sender, s, priceSapo);
+        if (fee > 0) { _safeTransferFrom(sapoToken, msg.sender, feeRecipient, fee); }
+
+        _deliver(id, s, st, q, usd8, "SAPO");
+    }
+
+    // buy with native (POL/ETH)
+    function buyWithPOL(uint256 id, uint32 q) external payable nonReentrant whenNotPaused {
+        (address s, uint64 p, uint32 st) = _unpack(_list[id]);
+        require(q > 0 && q <= st, "q");
+        uint256 usd8     = uint256(p) * q;
+        uint256 pr8      = polUsdPrice8();
+        uint256 weiPrice = (usd8 * 1e18) / pr8;
+        uint256 weiFee   = (weiPrice * _feeBps) / 10_000;
+        uint256 need     = weiPrice + weiFee;
+        require(msg.value >= need, "$");
+
+        (bool ok,) = payable(s).call{value: weiPrice}(""); require(ok, "p");
+        if (weiFee > 0) { (ok,) = payable(feeRecipient).call{value: weiFee}(""); require(ok, "f"); }
+        if (msg.value > need) { (ok,) = payable(msg.sender).call{value: msg.value - need}(""); require(ok, "c"); }
+
+        _deliver(id, s, st, q, usd8, "POL ");
+    }
+
+    // views
+    function balanceOf(address a, uint256 id) external view returns (uint32) { return _bal[id][a]; }
+    function getListing(uint256 id) external view returns (address seller, uint64 priceUsd8, uint32 qty) {
+        (seller, priceUsd8, qty) = _unpack(_list[id]);
+    }
+
+    // rescue / admin
+    receive() external payable { emit ReceivedETH(msg.sender, msg.value); }
+    function rescueERC20(address token, address to, uint256 amt) external onlyOwner {
+        _safeTransfer(token, to, amt);
+    }
+    function rescueETH(address payable to, uint256 amt) external onlyOwner { to.transfer(amt); }
+
+    function owner() public view returns (address) { return address(uint160(ctrl)); }
+    function pause()   external onlyOwner { _setPaused(true);  emit Paused(msg.sender); }
+    function unpause() external onlyOwner { _setPaused(false); emit Unpaused(msg.sender); }
+
+    // internals
+    function _deliver(uint256 id, address s, uint32 st, uint32 q, uint256 usd8, bytes4 ccy) private {
+        uint32 c = _bal[id][address(this)]; require(c >= q, "cust");
+        unchecked { _bal[id][address(this)] = c - q; _bal[id][msg.sender] += q; }
+        uint32 left = st - q;
+        if (left == 0) delete _list[id];
+        else {
+            uint64 pr = uint64((_list[id] >> 32) & type(uint64).max);
+            _list[id] = (uint256(uint160(s)) << 96) | (uint256(pr) << 32) | uint256(left);
+        }
+        emit TransferSingle(msg.sender, address(this), msg.sender, id, q);
+        emit ItemPurchased(msg.sender, id, q, usd8, ccy);
+    }
+
+    function _unpack(uint256 d) private pure returns (address s, uint64 p, uint32 q) {
+        require(d != 0, "no");
+        s = address(uint160(d >> 96));
+        p = uint64(d >> 32);
+        q = uint32(d);
+    }
+
+    // safe ERC20 helpers (accept tokens that return bool or no data)
+    function _safeTransfer(address token, address to, uint256 amt) private {
+        (bool ok, bytes memory ret) = token.call(abi.encodeWithSelector(IERC20Like.transfer.selector, to, amt));
+        require(ok && (ret.length == 0 || abi.decode(ret, (bool))), "erc20");
+    }
+    function _safeTransferFrom(address token, address from, address to, uint256 amt) private {
+        (bool ok, bytes memory ret) = token.call(abi.encodeWithSelector(IERC20Like.transferFrom.selector, from, to, amt));
+        require(ok && (ret.length == 0 || abi.decode(ret, (bool))), "erc20");
+    }
+
+    // ctrl bits
+    function _locked() private view returns (bool) { return ((ctrl >> 248) & 1) == 1; }
+    function _paused() private view returns (bool) { return ((ctrl >> 249) & 1) == 1; }
+    function _setLock(bool s) private { uint256 m = 1 << 248; ctrl = s ? (ctrl | m) : (ctrl & ~m); }
+    function _setPaused(bool s) private { uint256 m = 1 << 249; ctrl = s ? (ctrl | m) : (ctrl & ~m); }
+}

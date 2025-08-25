@@ -1,0 +1,586 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/*
+  SapoGameHub
+  - Inventário, marketplace, crafting, hunts
+  - Integração:
+      * SuperRegistry (sanções + termos recorrentes)
+      * FrogNFT (XP/energia)
+      * SapoFinance (preços/fees)
+  - Segurança: owner 2-passos, pausa, nonReentrant, timelock para parâmetros
+*/
+
+interface IERC20 {
+    function transfer(address to, uint256 v) external returns (bool);
+    function transferFrom(address f, address t, uint256 v) external returns (bool);
+}
+
+interface IFinance {
+    function polUsdPrice8() external view returns (uint256);
+    function marketFeeBps() external view returns (uint16);
+}
+
+interface IFrogs {
+    function ownerOf(uint256 id) external view returns (address);
+    function levelOf(uint256 id) external view returns (uint8);
+    function gainXP(uint256 id, uint32 amount) external;
+    function consumeEnergy(uint256 id, uint16 cost) external;
+}
+
+interface IMint1155 {
+    function mintTo(address to, uint256 id, uint256 amt, bytes calldata data) external;
+}
+
+interface IMint721 {
+    function mint(address to) external returns (uint256);
+}
+
+interface ISuperReg {
+    function isSanctioned(address w) external view returns (bool);
+    function hasAcceptedTerm(address w, bytes32 termId)
+        external view returns (bool, uint32, uint64, uint64);
+}
+
+contract SapoGameHub {
+    // Errors
+    error ErrAuth();
+    error ErrPaused();
+    error ErrReent();
+    error ErrZero();
+    error ErrExists();
+    error ErrNoOp();
+    error ErrSlip();
+    error ErrQ();
+    error ErrList();
+    error ErrCap();
+    error ErrWL();
+    error ErrHunt();
+    error ErrLvl();
+    error ErrBan();
+
+    // ─── Core ───
+    address public owner;
+    address public pendingOwner;
+    bool    public paused;
+    uint256 private _reent;
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert ErrAuth();
+        _;
+    }
+    modifier whenNotPaused() {
+        if (paused) revert ErrPaused();
+        _;
+    }
+    modifier nonReentrant() {
+        if (_reent == 1) revert ErrReent();
+        _reent = 1;
+        _;
+        _reent = 0;
+    }
+
+    event OwnershipTransferStarted(address from, address to);
+    event OwnershipTransferred(address from, address to);
+    event Paused(address by);
+    event Unpaused(address by);
+
+    constructor(
+        address _owner,
+        address _finance,
+        address _sapo,
+        address _frogs,
+        address _registry
+    ) {
+        if (
+            _owner   == address(0) ||
+            _finance == address(0) ||
+            _sapo    == address(0) ||
+            _frogs   == address(0)
+        ) revert ErrZero();
+
+        owner     = _owner;
+        finance   = _finance;
+        sapoToken = _sapo;
+        frogs     = IFrogs(_frogs);
+        registry  = _registry;
+
+        marketFeeBps = IFinance(finance).marketFeeBps();
+    }
+
+    function transferOwnership(address to) external onlyOwner {
+        if (to == address(0)) revert ErrZero();
+        pendingOwner = to;
+        emit OwnershipTransferStarted(owner, to);
+    }
+
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert ErrAuth();
+        address old = owner;
+        owner        = pendingOwner;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(old, owner);
+    }
+
+    function pause() external onlyOwner {
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    function unpause() external onlyOwner {
+        paused = false;
+        emit Unpaused(msg.sender);
+    }
+
+    // ─── SafeERC20 ───
+    function _safeTransfer(address token, address to, uint256 a) internal {
+        (bool ok, bytes memory r) = token.call(
+            abi.encodeWithSelector(IERC20.transfer.selector, to, a)
+        );
+        require(ok && (r.length == 0 || abi.decode(r, (bool))), "erc20");
+    }
+
+    function _safeTransferFrom(
+        address token,
+        address from,
+        address to,
+        uint256 a
+    ) internal {
+        (bool ok, bytes memory r) = token.call(
+            abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, a)
+        );
+        require(ok && (r.length == 0 || abi.decode(r, (bool))), "erc20");
+    }
+
+    // ─── External Contracts ───
+    address public finance;
+    address public sapoToken;
+    IFrogs  public frogs;
+    address public registry;
+
+    // ─── Marketplace Fee ───
+    uint16 public marketFeeBps;
+    uint16 public constant MAX_FEE_BPS = 500;
+
+    // ─── Gameplay Term ───
+    bytes32 public gameplayTermId;
+    event GameplayTermSet(bytes32 termId);
+
+    function setGameplayTerm(bytes32 termId) external onlyOwner {
+        gameplayTermId = termId;
+        emit GameplayTermSet(termId);
+    }
+
+    // ─── Timelock for Settings ───
+    uint64 public constant MIN_DELAY = 24 hours;
+    uint64 public constant MAX_DELAY = 14 days;
+    mapping(bytes32 => uint64 ) public eta;
+    mapping(bytes32 => bytes  ) public blob;
+    event OpQueued(bytes32 key, bytes4 typ);
+    event OpExecuted(bytes32 key, bytes4 typ);
+
+    function _queue(bytes32 key, uint64 d) internal {
+        if (eta[key] != 0) revert ErrExists();
+        uint64 dd = d < MIN_DELAY ? MIN_DELAY : d > MAX_DELAY ? MAX_DELAY : d;
+        eta[key] = uint64(block.timestamp) + dd;
+        emit OpQueued(key, bytes4(key));
+    }
+
+    function _exec(bytes32 key) internal {
+        uint64 e = eta[key];
+        if (e == 0 || block.timestamp < e) revert ErrNoOp();
+        delete eta[key];
+        emit OpExecuted(key, bytes4(key));
+    }
+
+    function queueSetFinance(address a, uint64 d) external onlyOwner returns (bytes32 key) {
+        if (a == address(0)) revert ErrZero();
+        key = keccak256(abi.encode("finance", a, address(this)));
+        blob[key] = abi.encode(a);
+        _queue(key, d);
+    }
+    function execSetFinance(bytes32 key) external onlyOwner {
+        _exec(key);
+        (address a) = abi.decode(blob[key], (address));
+        delete blob[key];
+        finance = a;
+        marketFeeBps = IFinance(finance).marketFeeBps();
+    }
+
+    function queueSetSapo(address a, uint64 d) external onlyOwner returns (bytes32 key) {
+        if (a == address(0)) revert ErrZero();
+        key = keccak256(abi.encode("sapo", a, address(this)));
+        blob[key] = abi.encode(a);
+        _queue(key, d);
+    }
+    function execSetSapo(bytes32 key) external onlyOwner {
+        _exec(key);
+        (address a) = abi.decode(blob[key], (address));
+        delete blob[key];
+        sapoToken = a;
+    }
+
+    function queueSetFrogs(address a, uint64 d) external onlyOwner returns (bytes32 key) {
+        if (a == address(0)) revert ErrZero();
+        key = keccak256(abi.encode("frogs", a, address(this)));
+        blob[key] = abi.encode(a);
+        _queue(key, d);
+    }
+    function execSetFrogs(bytes32 key) external onlyOwner {
+        _exec(key);
+        (address a) = abi.decode(blob[key], (address));
+        delete blob[key];
+        frogs = IFrogs(a);
+    }
+
+    function queueSetRegistry(address a, uint64 d) external onlyOwner returns (bytes32 key) {
+        key = keccak256(abi.encode("registry", a, address(this)));
+        blob[key] = abi.encode(a);
+        _queue(key, d);
+    }
+    function execSetRegistry(bytes32 key) external onlyOwner {
+        _exec(key);
+        (address a) = abi.decode(blob[key], (address));
+        delete blob[key];
+        registry = a;
+    }
+
+    function queueSetMarketFee(uint16 bps, uint64 d) external onlyOwner returns (bytes32 key) {
+        if (bps > MAX_FEE_BPS) revert ErrCap();
+        key = keccak256(abi.encode("mfee", bps, address(this)));
+        blob[key] = abi.encode(bps);
+        _queue(key, d);
+    }
+    function execSetMarketFee(bytes32 key) external onlyOwner {
+        _exec(key);
+        (uint16 bps) = abi.decode(blob[key], (uint16));
+        delete blob[key];
+        marketFeeBps = bps;
+    }
+
+    // ─── Access Gate (Sanctions + Terms) ───
+    function _checkAccess(address user) internal view {
+        if (registry != address(0)) {
+            (bool ok1, bytes memory r1) = registry.staticcall(
+                abi.encodeWithSelector(ISuperReg.isSanctioned.selector, user)
+            );
+            if (ok1 && r1.length == 32 && abi.decode(r1, (bool))) revert ErrBan();
+
+            if (gameplayTermId != bytes32(0)) {
+                (bool ok2, bytes memory r2) = registry.staticcall(
+                    abi.encodeWithSelector(ISuperReg.hasAcceptedTerm.selector, user, gameplayTermId)
+                );
+                if (!(ok2 && r2.length >= 128 && abi.decode(r2, (bool)))) revert ErrAuth();
+            }
+        }
+    }
+
+    // ─── Inventário ───
+    mapping(address => mapping(uint256 => uint32)) public itemBal;
+    event ItemGranted(address to, uint256 id, uint32 amt);
+    event ItemConsumed(address from, uint256 id, uint32 amt);
+
+    function _grantItem(address to, uint256 id, uint32 amt) internal {
+        itemBal[to][id] += amt;
+        emit ItemGranted(to, id, amt);
+    }
+    function _consumeItem(address from, uint256 id, uint32 amt) internal {
+        uint32 b = itemBal[from][id];
+        require(b >= amt, "bal");
+        unchecked { itemBal[from][id] = b - amt; }
+        emit ItemConsumed(from, id, amt);
+    }
+
+    function grantItemAdmin(address to, uint256 id, uint32 amt) external onlyOwner whenNotPaused {
+        if (to == address(0) || amt == 0) revert ErrZero();
+        _grantItem(to, id, amt);
+    }
+    function consumeItemAdmin(address from, uint256 id, uint32 amt) external onlyOwner whenNotPaused {
+        if (from == address(0) || amt == 0) revert ErrZero();
+        _consumeItem(from, id, amt);
+    }
+
+    // ─── Marketplace ───
+    struct Listing {
+        address seller;
+        uint64  priceUsd8;
+        uint32  qty;
+        uint32  nonce;
+    }
+    mapping(uint256 => Listing) public listings;
+    event ItemListed(address seller, uint256 id, uint32 qty, uint64 priceUsd8, uint32 nonce);
+    event ItemUnlisted(address seller, uint256 id, uint32 returned);
+    event ItemPurchased(address buyer, uint256 id, uint32 qty, uint256 usd8, bytes4 ccy, uint256 fee);
+
+    function _priceWei(uint256 usd8) internal view returns (uint256) {
+        uint256 rate8 = IFinance(finance).polUsdPrice8();
+        return (usd8 * 1e18) / rate8;
+    }
+
+    function listItem(uint256 id, uint32 qty, uint64 priceUsd8)
+        external whenNotPaused nonReentrant
+    {
+        _checkAccess(msg.sender);
+        if (qty == 0 || priceUsd8 == 0) revert ErrQ();
+
+        _consumeItem(msg.sender, id, qty);
+
+        Listing storage L = listings[id];
+        if (L.qty != 0) revert ErrList();
+        L.seller     = msg.sender;
+        L.priceUsd8  = priceUsd8;
+        L.qty        = qty;
+        unchecked { L.nonce++; }
+        emit ItemListed(msg.sender, id, qty, priceUsd8, L.nonce);
+    }
+
+    function unlistItem(uint256 id) external nonReentrant {
+        Listing storage L = listings[id];
+        if (L.qty == 0) revert ErrList();
+        if (!(msg.sender == L.seller || (msg.sender == owner && paused))) revert ErrAuth();
+
+        uint32 q      = L.qty;
+        address seller = L.seller;
+        delete listings[id];
+        _grantItem(seller, id, q);
+        emit ItemUnlisted(seller, id, q);
+    }
+
+    function buyWithSAPO(
+        uint256 id,
+        uint32  q,
+        uint256 maxSapo,
+        uint32  expNonce
+    ) external whenNotPaused nonReentrant {
+        _checkAccess(msg.sender);
+
+        Listing storage L = listings[id];
+        if (L.qty == 0 || q == 0 || q > L.qty) revert ErrQ();
+        if (L.nonce != expNonce) revert ErrExists();
+
+        uint256 usd8     = uint256(L.priceUsd8) * q;
+        uint256 sapoCost = (usd8 * 10_000) / 1e8;
+        uint256 fee      = (sapoCost * marketFeeBps) / 10_000;
+        if (sapoCost + fee > maxSapo) revert ErrSlip();
+
+        _safeTransferFrom(sapoToken, msg.sender, L.seller, sapoCost);
+        if (fee > 0) {
+            _safeTransferFrom(sapoToken, msg.sender, finance, fee);
+        }
+
+        unchecked { L.qty -= q; }
+        if (L.qty == 0) delete listings[id];
+
+        _grantItem(msg.sender, id, q);
+        emit ItemPurchased(msg.sender, id, q, usd8, "SAPO", fee);
+    }
+
+    function buyWithPOL(
+        uint256 id,
+        uint32  q,
+        uint256 maxWei,
+        uint32  expNonce
+    ) external payable whenNotPaused nonReentrant {
+        _checkAccess(msg.sender);
+
+        Listing storage L = listings[id];
+        if (L.qty == 0 || q == 0 || q > L.qty) revert ErrQ();
+        if (L.nonce != expNonce) revert ErrExists();
+
+        uint256 usd8    = uint256(L.priceUsd8) * q;
+        uint256 weiPrice = _priceWei(usd8);
+        uint256 weiFee   = (weiPrice * marketFeeBps) / 10_000;
+        uint256 need     = weiPrice + weiFee;
+        if (need > maxWei || msg.value < need) revert ErrSlip();
+
+        (bool ok, ) = payable(L.seller).call{ value: weiPrice }("");
+        require(ok, "pay");
+        if (weiFee > 0) {
+            (ok, ) = payable(finance).call{ value: weiFee }("");
+            require(ok, "fee");
+        }
+        if (msg.value > need) {
+            (ok, ) = payable(msg.sender).call{ value: msg.value - need }("");
+            require(ok, "chg");
+        }
+
+        unchecked { L.qty -= q; }
+        if (L.qty == 0) delete listings[id];
+
+        _grantItem(msg.sender, id, q);
+        emit ItemPurchased(msg.sender, id, q, usd8, "POL ", weiFee);
+    }
+
+    // ─── Crafting ───
+    struct Recipe {
+        uint256[] inIds;
+        uint32[]  inAmts;
+        uint256   outId;
+        uint32    outAmt;
+        bool      active;
+    }
+    mapping(uint256 => Recipe) public recipes;
+    event RecipeSet(uint256 id);
+    event Crafted(address user, uint256 recipeId, uint32 times);
+
+    function setRecipe(
+        uint256 id,
+        uint256[] calldata inIds,
+        uint32[]  calldata inAmts,
+        uint256   outId,
+        uint32    outAmt,
+        bool      active
+    ) external onlyOwner {
+        if (inIds.length == 0 || inIds.length != inAmts.length) revert ErrQ();
+        recipes[id] = Recipe(inIds, inAmts, outId, outAmt, active);
+        emit RecipeSet(id);
+    }
+
+    function craft(uint256 recipeId, uint32 times)
+        external whenNotPaused nonReentrant
+    {
+        _checkAccess(msg.sender);
+        if (times == 0) revert ErrQ();
+
+        Recipe storage R = recipes[recipeId];
+        if (!R.active) revert ErrNoOp();
+
+        uint256 n = R.inIds.length;
+        for (uint256 i; i < n; i++) {
+            _consumeItem(msg.sender, R.inIds[i], uint32(uint256(R.inAmts[i]) * times));
+        }
+        _grantItem(msg.sender, R.outId, uint32(uint256(R.outAmt) * times));
+        emit Crafted(msg.sender, recipeId, times);
+    }
+
+    // ─── NFT Conversion ───
+    mapping(address=>bool) public nftWhitelist;
+    event NFTWhitelistChanged(address nft, bool ok);
+    event ConvertedToNFT(address user, address nft, uint256 outId, uint32 amt);
+
+    function setNFTWhitelist(address nft, bool ok) external onlyOwner {
+        if (nft == address(0)) revert ErrZero();
+        nftWhitelist[nft] = ok;
+        emit NFTWhitelistChanged(nft, ok);
+    }
+
+    function convertToNFT_1155(
+        uint256 itemId,
+        uint32  amt,
+        address nft,
+        uint256 outId,
+        bytes calldata data
+    )
+        external whenNotPaused nonReentrant
+    {
+        _checkAccess(msg.sender);
+        if (!nftWhitelist[nft]) revert ErrWL();
+        _consumeItem(msg.sender, itemId, amt);
+        IMint1155(nft).mintTo(msg.sender, outId, amt, data);
+        emit ConvertedToNFT(msg.sender, nft, outId, amt);
+    }
+
+    function convertToNFT_721(
+        uint256 itemId,
+        uint32  amt,
+        address nft
+    )
+        external whenNotPaused nonReentrant
+    {
+        _checkAccess(msg.sender);
+        if (!nftWhitelist[nft]) revert ErrWL();
+        _consumeItem(msg.sender, itemId, amt);
+        for (uint32 i; i < amt; i++) {
+            IMint721(nft).mint(msg.sender);
+        }
+        emit ConvertedToNFT(msg.sender, nft, 0, amt);
+    }
+
+    // ─── Hunts (commit-reveal) ───
+    uint64 public constant HUNT_COOLDOWN   = 5 minutes;
+    uint64 public constant DAY            = 86400;
+    uint32 public        maxHuntsPerDay   = 200;
+
+    struct HuntDef {
+        uint8  minLevel;
+        uint16 energyCost;
+        uint8  phases;
+        uint32 xpReward;
+        uint256 lootItemId;
+        uint32  lootMin;
+        uint32  lootMax;
+    }
+    mapping(uint256 => HuntDef) public hunts;
+
+    struct Commit {
+        address player;
+        uint64  time;
+        uint32  frogId;
+        uint32  huntId;
+        bytes32 commit;
+        bool    active;
+    }
+    mapping(bytes32 => Commit) public huntCommits;
+
+    mapping(uint256 => uint64) public lastHuntAt;
+    mapping(address => uint64) public dayWindowStart;
+    mapping(address => uint32) public huntsInWindow;
+
+    event HuntDefined(uint256 huntId, HuntDef defn);
+    event HuntLimitsSet(uint32 maxPerDay);
+    event HuntEntered(address user, uint256 huntId, uint256 frogId, bytes32 key);
+    event HuntResolved(address user, uint256 huntId, uint256 frogId, uint32 xp, uint32 loot);
+
+    function setHunt(uint256 huntId, HuntDef calldata d) external onlyOwner {
+        if (d.phases == 0 || d.xpReward == 0) revert ErrHunt();
+        hunts[huntId] = d;
+        emit HuntDefined(huntId, d);
+    }
+    function setHuntLimits(uint32 maxPerDay_) external onlyOwner {
+        if (maxPerDay_ == 0 || maxPerDay_ > 5000) revert ErrCap();
+        maxHuntsPerDay = maxPerDay_;
+        emit HuntLimitsSet(maxPerDay_);
+    }
+
+    function enterHunt(
+        uint256 huntId,
+        uint256 frogId,
+        bytes32 commitHash
+    ) external whenNotPaused {
+        _checkAccess(msg.sender);
+
+        if (frogs.ownerOf(frogId) != msg.sender) revert ErrAuth();
+        HuntDef memory H = hunts[huntId];
+        if (H.phases == 0) revert ErrHunt();
+        if (frogs.levelOf(frogId) < H.minLevel) revert ErrLvl();
+        if (block.timestamp < lastHuntAt[frogId] + HUNT_COOLDOWN) revert ErrHunt();
+
+        uint64 w = dayWindowStart[msg.sender];
+        if (w == 0 || block.timestamp >= w + DAY) {
+            dayWindowStart[msg.sender] = uint64(block.timestamp);
+            huntsInWindow[msg.sender]  = 0;
+        }
+        unchecked {
+            huntsInWindow[msg.sender]++;
+        }
+        if (huntsInWindow[msg.sender] > maxHuntsPerDay) revert ErrCap();
+
+        frogs.consumeEnergy(frogId, H.energyCost);
+        lastHuntAt[frogId] = uint64(block.timestamp);
+
+        bytes32 key = keccak256(
+            abi.encode(msg.sender, frogId, huntId, commitHash, block.number)
+        );
+        huntCommits[key] = Commit(
+            msg.sender,
+            uint64(block.timestamp),
+            uint32(frogId),
+            uint32(huntId),
+            commitHash,
+            true
+        );
+        emit HuntEntered(msg.sender, huntId, frogId, key);
+    }
+
+    function resolveHunt(bytes32 key, bytes32 reveal)
+        external whenNotPaused nonReentrant

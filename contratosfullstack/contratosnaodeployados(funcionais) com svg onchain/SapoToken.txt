@@ -1,0 +1,106 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+interface IERC20Rescue {
+    function transfer(address to, uint256 amt) external returns (bool);
+}
+
+contract SapoToken {
+    // minimal, gas-lean SAPO token with owner + swapTransfer hook
+
+    mapping(address => uint32) private _bal;
+    address public immutable owner;
+    address private _swap;
+    uint32 private _cap;
+    uint32 private _tot;
+    bytes6 private immutable _name;
+
+    event Transfer(address indexed from, address indexed to, uint32 value);
+    event CapChanged(uint32 oldCap, uint32 newCap);
+    event SwapSet(address indexed swap);
+    event ReceivedETH(address indexed sender, uint256 amount);
+
+    modifier onlyOwner() { require(msg.sender == owner, "auth"); _; }
+    modifier onlySwap()  { require(msg.sender == _swap,  "swap"); _; }
+
+    constructor(string memory name_, uint32 cap_, address treasuryOwner, uint32 initialMint) {
+        require(treasuryOwner != address(0), "0");
+        owner = msg.sender;
+        _cap  = cap_;
+        bytes memory b = bytes(name_);
+        require(b.length <= 6, "nm");
+        _name = bytes6(b);
+        if (initialMint > 0) {
+            _bal[treasuryOwner] = initialMint;
+            _tot = initialMint;
+            emit Transfer(address(0), treasuryOwner, initialMint);
+        }
+    }
+
+    function setSwapContract(address s) external onlyOwner {
+        require(_swap == address(0) && s != address(0), "set");
+        _swap = s;
+        emit SwapSet(s);
+    }
+
+    // hook used by SapoSwap to move balances without approvals/allowances
+    function swapTransfer(address from, address to, uint24 v) external onlySwap {
+        _transfer(from, to, v);
+    }
+
+    function mint(address to, uint32 v) external onlyOwner {
+        require(to != address(0), "0");
+        uint32 ns = _tot + v;
+        require(ns <= _cap, "cap");
+        unchecked { _bal[to] += v; _tot = ns; }
+        emit Transfer(address(0), to, v);
+    }
+
+    function burn(uint32 v) external {
+        uint32 b = _bal[msg.sender];
+        require(b >= v, "bal");
+        unchecked { _bal[msg.sender] = b - v; _tot -= v; }
+        emit Transfer(msg.sender, address(0), v);
+    }
+
+    function setCap(uint32 nc) external onlyOwner {
+        require(nc >= _tot, "lt");
+        uint32 o = _cap;
+        _cap = nc;
+        emit CapChanged(o, nc);
+    }
+
+    // rescue / receive
+    receive() external payable { emit ReceivedETH(msg.sender, msg.value); }
+    function rescueERC20(address token, address to, uint256 amt) external onlyOwner {
+        require(IERC20Rescue(token).transfer(to, amt), "rescue");
+    }
+    function rescueETH(address payable to, uint256 amt) external onlyOwner {
+        to.transfer(amt);
+    }
+
+    // internals
+    function _transfer(address f, address t, uint24 v) internal {
+        require(t != address(0), "0");
+        uint32 b = _bal[f];
+        require(b >= v, "bal");
+        unchecked { _bal[f] = b - v; _bal[t] += v; }
+        emit Transfer(f, t, v);
+    }
+
+    // views
+    function name() public view returns (string memory) {
+        bytes memory r = new bytes(6);
+        for (uint i; i < 6; i++) r[i] = _name[i];
+        return string(r);
+    }
+    function symbol() public view returns (string memory) {
+        bytes memory r = new bytes(4);
+        for (uint i; i < 4; i++) r[i] = _name[i];
+        return string(r);
+    }
+    function decimals() public pure returns (uint8) { return 0; }
+    function cap() public view returns (uint32) { return _cap; }
+    function totalSupply() public view returns (uint32) { return _tot; }
+    function balanceOf(address a) public view returns (uint32) { return _bal[a]; }
+}

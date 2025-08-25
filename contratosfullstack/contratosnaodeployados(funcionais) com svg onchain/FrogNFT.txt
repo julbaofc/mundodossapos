@@ -1,0 +1,234 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+interface IERC20Pay {
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+}
+interface IFeeView {
+    function feeBps()       external view returns (uint16);
+    function feeRecipient() external view returns (address);
+}
+
+contract FrogNFT {
+    // ctrl bits: [0..159]=owner,[248]=lock,[249]=paused]
+    uint256 private ctrl;
+
+    IERC20Pay public immutable sapo;
+    IFeeView  public immutable hub;
+    uint256   public immutable imageFeeWei;
+
+    string public constant name   = "Mundo dos Sapos";
+    string public constant symbol = "SAPOFROG";
+
+    mapping(uint256 => address) private _own;
+    mapping(address => uint256) private _bal;
+    mapping(uint256 => address) private _ap;
+    mapping(address => mapping(address => bool)) private _op;
+    mapping(uint256 => bytes16) private _g;
+
+    uint256 private _next = 1;
+    uint256 public constant BREED_BASE_SAPO = 1_000;
+
+    event Transfer(address indexed from, address indexed to, uint256 indexed id);
+    event Approval(address indexed owner, address indexed to, uint256 indexed id);
+    event ApprovalForAll(address indexed owner, address indexed op, bool approved);
+    event Paused(address by);
+    event Unpaused(address by);
+    event Bred(address indexed user, uint256 a, uint256 b, uint256 child, uint256 feeSapo, uint256 imgWei);
+    event ReceivedETH(address indexed sender, uint256 amount);
+
+    modifier onlyOwner()    { require(msg.sender == owner(), "auth"); _; }
+    modifier whenNotPaused(){ require(!_paused(), "ps"); _; }
+    modifier nonReentrant() { require(!_locked(), "reent"); _setLock(true); _; _setLock(false); }
+
+    constructor(address sapo_, address hub_, uint256 imageFeeWei_) {
+        require(sapo_ != address(0) && hub_ != address(0), "0");
+        ctrl = uint256(uint160(msg.sender));
+        sapo = IERC20Pay(sapo_);
+        hub  = IFeeView(hub_);
+        imageFeeWei = imageFeeWei_;
+    }
+
+    // breeding
+    function breed(uint256 pa, uint256 pb, bytes16 seed) external payable whenNotPaused nonReentrant returns (uint256 id) {
+        require(pa != pb, "eq");
+        require(ownerOf(pa) == msg.sender && ownerOf(pb) == msg.sender, "own");
+        require(msg.value >= imageFeeWei, "img");
+
+        uint16 bps = hub.feeBps(); require(bps <= 10_000, "max");
+        uint256 feeSapo = (BREED_BASE_SAPO * bps) / 10_000;
+
+        require(sapo.transferFrom(msg.sender, hub.feeRecipient(), BREED_BASE_SAPO + feeSapo), "pay");
+
+        (bool ok,) = payable(hub.feeRecipient()).call{value: imageFeeWei}("");
+        require(ok, "if");
+        if (msg.value > imageFeeWei) {
+            (ok,) = payable(msg.sender).call{value: msg.value - imageFeeWei}("");
+            require(ok, "chg");
+        }
+
+        bytes16 child = _mix(_g[pa], _g[pb], seed);
+        id = _mint(msg.sender, child);
+        emit Bred(msg.sender, pa, pb, id, feeSapo, imageFeeWei);
+    }
+
+    // mint admin
+    function mintTo(address to, bytes16 genome) external onlyOwner whenNotPaused nonReentrant returns (uint256 id) {
+        id = _mint(to, genome);
+    }
+
+    // ERC721 minimal
+    function ownerOf(uint256 id) public view returns (address o) { o = _own[id]; require(o != address(0), "nf"); }
+    function balanceOf(address a) external view returns (uint256) { return _bal[a]; }
+
+    function approve(address to, uint256 id) external whenNotPaused nonReentrant {
+        address o = ownerOf(id);
+        require(msg.sender == o || _op[o][msg.sender], "auth");
+        _ap[id] = to;
+        emit Approval(o, to, id);
+    }
+    function getApproved(uint256 id) external view returns (address) { return _ap[id]; }
+
+    function setApprovalForAll(address op, bool approved) external whenNotPaused nonReentrant {
+        _op[msg.sender][op] = approved;
+        emit ApprovalForAll(msg.sender, op, approved);
+    }
+    function isApprovedForAll(address o, address op) external view returns (bool) { return _op[o][op]; }
+
+    function transferFrom(address from, address to, uint256 id) public whenNotPaused nonReentrant {
+        require(to != address(0), "to");
+        address o = ownerOf(id);
+        require(o == from, "own");
+        require(msg.sender == o || msg.sender == _ap[id] || _op[o][msg.sender], "auth");
+        _ap[id] = address(0);
+        _own[id] = to;
+        _bal[from]--;
+        _bal[to]++;
+        emit Transfer(from, to, id);
+    }
+
+    function safeTransferFrom(address from, address to, uint256 id) external {
+        transferFrom(from, to, id);
+        _checkERC721Receiver(from, to, id, "");
+    }
+    function safeTransferFrom(address from, address to, uint256 id, bytes memory data) external {
+        transferFrom(from, to, id);
+        _checkERC721Receiver(from, to, id, data);
+    }
+
+    // metadata
+    function tokenURI(uint256 id) external view returns (string memory) {
+        require(_own[id] != address(0), "nf");
+        bytes memory svg  = _svg(_g[id]);
+        bytes memory json = abi.encodePacked(
+            '{"name":"Frog #', _utoa(id),
+            '","description":"Mundo dos Sapos - on-chain SVG",',
+            '"image":"data:image/svg+xml;base64,', _b64(svg), '"}'
+        );
+        return string(abi.encodePacked("data:application/json;base64,", _b64(json)));
+    }
+
+    // rescue / admin
+    receive() external payable { emit ReceivedETH(msg.sender, msg.value); }
+    function rescueETH(address payable to, uint256 amt) external onlyOwner { to.transfer(amt); }
+
+    function owner() public view returns (address) { return address(uint160(ctrl)); }
+    function pause()   external onlyOwner { _setPaused(true);  emit Paused(msg.sender); }
+    function unpause() external onlyOwner { _setPaused(false); emit Unpaused(msg.sender); }
+
+    // internals
+    function _mint(address to, bytes16 genome) internal returns (uint256 id) {
+        require(to != address(0), "to");
+        id = _next++;
+        _own[id] = to;
+        _bal[to]++;
+        _g[id] = genome;
+        emit Transfer(address(0), to, id);
+    }
+
+    function _mix(bytes16 a, bytes16 b, bytes16 s) internal pure returns (bytes16 c) {
+        bytes16 m;
+        assembly {
+            m := or(
+                and(a, 0xF0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F0),
+                and(b, 0x0F0F0F0F0F0F0F0F0F0F0F0F0F0F0F)
+            )
+        }
+        c = bytes16(keccak256(abi.encodePacked(m, s)));
+    }
+
+    function _checkERC721Receiver(address from, address to, uint256 id, bytes memory data) private {
+        if (to.code.length == 0) return;
+        (bool ok, bytes memory ret) = to.call(abi.encodeWithSelector(bytes4(0x150b7a02), msg.sender, from, id, data));
+        require(ok && ret.length == 32 && abi.decode(ret, (bytes4)) == bytes4(0x150b7a02), "rcv");
+    }
+
+    // svg/base64 helpers
+    function _svg(bytes16 g) internal pure returns (bytes memory) {
+        uint256 u  = uint256(uint128(g));
+        uint24 c1  = uint24(u >> 104);
+        uint24 c2  = uint24(u >> 80);
+        uint24 c3  = uint24(u >> 56);
+        uint24 c4  = uint24(u >> 32);
+        return abi.encodePacked(
+            '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">',
+            '<style>.b{fill:#', _hx(c1), ';}.y{fill:#', _hx(c2), ';}',
+            '.e{fill:#', _hx(c3), ';}.p{fill:#', _hx(c4), ';opacity:.6;}',
+            '.o{stroke:#132A13;stroke-width:6;fill:none;}</style>',
+            '<g id="frog"><ellipse class="b" cx="256" cy="300" rx="170" ry="140"/>',
+            '<ellipse class="y" cx="256" cy="330" rx="120" ry="90"/>',
+            '<circle class="e" cx="190" cy="210" r="25"/><circle class="e" cx="322" cy="210" r="25"/>',
+            '<circle class="p" cx="220" cy="270" r="18"/><circle class="p" cx="290" cy="250" r="14"/>',
+            '<ellipse class="o" cx="256" cy="300" rx="170" ry="140"/></g></svg>'
+        );
+    }
+
+    function _b64(bytes memory d) internal pure returns (string memory) {
+        uint256 l = d.length;
+        if (l == 0) return "";
+        string memory t = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        string memory r = new string(4 * ((l + 2) / 3));
+        assembly {
+            let tp := add(t, 1)
+            let dp := add(d, 32)
+            let e  := add(dp, l)
+            let rp := add(r, 32)
+            for { } lt(dp, e) { } {
+                let i := mload(dp)
+                dp := add(dp, 3)
+                mstore8(rp,      mload(add(tp, and(shr(26, i),0x3F))))
+                mstore8(add(rp,1),mload(add(tp, and(shr(20, i),0x3F))))
+                mstore8(add(rp,2),mload(add(tp, and(shr(14, i),0x3F))))
+                mstore8(add(rp,3),mload(add(tp, and(shr(8 , i),0x3F))))
+                rp := add(rp, 4)
+            }
+            switch mod(l, 3)
+            case 1 { mstore(sub(rp,2), shl(240, 0x3d3d)) }
+            case 2 { mstore(sub(rp,1), shl(248, 0x3d)) }
+        }
+        return r;
+    }
+
+    function _hx(uint24 v) internal pure returns (bytes memory o) {
+        o = new bytes(6);
+        for (uint i; i < 6; i++) {
+            uint8 n = uint8((v >> (20 - 4*i)) & 0x0f);
+            o[i] = n < 10 ? bytes1(n + 48) : bytes1(n + 87);
+        }
+    }
+
+    function _utoa(uint256 v) internal pure returns (string memory s) {
+        if (v == 0) return "0";
+        uint256 m = v; uint256 l;
+        while (m != 0) { l++; m /= 10; }
+        bytes memory b = new bytes(l);
+        while (v != 0) { l--; b[l] = bytes1(uint8(48 + v % 10)); v /= 10; }
+        s = string(b);
+    }
+
+    // ctrl bits
+    function _locked() private view returns (bool) { return ((ctrl >> 248) & 1) == 1; }
+    function _paused() private view returns (bool) { return ((ctrl >> 249) & 1) == 1; }
+    function _setLock(bool s) private { uint256 m = 1 << 248; ctrl = s ? (ctrl | m) : (ctrl & ~m); }
+    function _setPaused(bool s) private { uint256 m = 1 << 249; ctrl = s ? (ctrl | m) : (ctrl & ~m); }
+}

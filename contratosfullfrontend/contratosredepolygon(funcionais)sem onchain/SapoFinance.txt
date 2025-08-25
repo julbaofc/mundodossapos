@@ -1,0 +1,665 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/*
+  SapoFinance
+  - Cofre e Swap POL ↔ SAPO (stale-check, slippage, fee caps)
+  - Tesouraria: spenders c/ cap diário
+  - Split automático entre 2 payees via timelock
+  - Cheques on-chain com caução (ETH/SAPO)
+  - Empréstimos ETH → SAPO (colateral, LTV, juros simples, liquidação)
+  - Integração SuperRegistry: sanções + termos recorrentes + registro de instrumentos
+*/
+
+interface IERC20 {
+    function transfer(address to, uint256 v) external returns (bool);
+    function transferFrom(address f, address t, uint256 v) external returns (bool);
+    function balanceOf(address) external view returns (uint256);
+}
+
+interface IFeed {
+    function latestRoundData()
+        external view
+        returns (uint80, int256, uint256, uint256, uint80);
+    function decimals() external view returns (uint8);
+}
+
+interface ISuperReg {
+    function isSanctioned(address w) external view returns (bool);
+    function hasAcceptedTerm(address w, bytes32 termId)
+        external view
+        returns (bool ok, uint32 version, uint64 time, uint64 validUntil);
+    function registerInstrument(bytes32 instId, uint8 typ, bytes32 hash, address partyA, address partyB) external;
+    function setInstrumentStatus(bytes32 instId, uint8 status, bytes32 note) external;
+}
+
+contract SapoFinance {
+    // Errors
+    error ErrAuth();
+    error ErrPaused();
+    error ErrZero();
+    error ErrReent();
+    error ErrFeed();
+    error ErrStale();
+    error ErrSlip();
+    error ErrLiq();
+    error ErrCap();
+    error ErrAmt();
+    error ErrExists();
+    error ErrNoOp();
+    error ErrBps();
+    error ErrBan();
+
+    // ─── Core ───
+    address public owner;
+    address public pendingOwner;
+    bool    public paused;
+    uint256 private _reentrant;
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert ErrAuth();
+        _;
+    }
+    modifier whenNotPaused() {
+        if (paused) revert ErrPaused();
+        _;
+    }
+    modifier nonReentrant() {
+        if (_reentrant == 1) revert ErrReent();
+        _reentrant = 1;
+        _;
+        _reentrant = 0;
+    }
+
+    event OwnershipTransferStarted(address from, address to);
+    event OwnershipTransferred(address from, address to);
+    event Paused(address by);
+    event Unpaused(address by);
+
+    constructor(
+        address _owner,
+        address sapoToken_,
+        address feedP,
+        address feedB,
+        uint64  maxAge_,
+        uint16  marketFeeBps_,
+        uint16  swapFeeBps_,
+        address registry_
+    ) {
+        if (
+            _owner == address(0) ||
+            sapoToken_ == address(0) ||
+            feedP      == address(0) ||
+            feedB      == address(0)
+        ) revert ErrZero();
+
+        owner       = _owner;
+        sapo        = sapoToken_;
+        feedPrimary = IFeed(feedP);
+        feedBackup  = IFeed(feedB);
+        if (
+            feedPrimary.decimals() != 8 ||
+            feedBackup.decimals()  != 8
+        ) revert ErrFeed();
+
+        maxPriceAge  = maxAge_;
+        if (marketFeeBps_ > MAX_FEE_BPS || swapFeeBps_ > MAX_FEE_BPS) revert ErrBps();
+        marketFeeBps = marketFeeBps_;
+        swapFeeBps   = swapFeeBps_;
+        registry     = registry_;
+
+        borrowIndex = 1e18;
+        lastAccrual = uint64(block.timestamp);
+    }
+
+    function transferOwnership(address to) external onlyOwner {
+        if (to == address(0)) revert ErrZero();
+        pendingOwner = to;
+        emit OwnershipTransferStarted(owner, to);
+    }
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert ErrAuth();
+        address old = owner;
+        owner        = pendingOwner;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(old, owner);
+    }
+    function pause()   external onlyOwner { paused = true;  emit Paused(msg.sender); }
+    function unpause() external onlyOwner { paused = false; emit Unpaused(msg.sender); }
+
+    // ─── SafeERC20 ───
+    function _safeTransfer(address token, address to, uint256 amt) internal {
+        (bool ok, bytes memory ret) = token.call(
+            abi.encodeWithSelector(IERC20.transfer.selector, to, amt)
+        );
+        require(ok && (ret.length == 0 || abi.decode(ret, (bool))), "erc20");
+    }
+    function _safeTransferFrom(address token, address from, address to, uint256 amt) internal {
+        (bool ok, bytes memory ret) = token.call(
+            abi.encodeWithSelector(IERC20.transferFrom.selector, from, to, amt)
+        );
+        require(ok && (ret.length == 0 || abi.decode(ret, (bool))), "erc20");
+    }
+
+    // ─── Tokens / Feeds / Fees ───
+    address public immutable sapo;
+    uint256 public constant SAPO_PER_USD = 10_000;
+    uint16  public constant MAX_FEE_BPS  = 500;
+
+    uint16 public marketFeeBps;
+    uint16 public swapFeeBps;
+    IFeed  public feedPrimary;
+    IFeed  public feedBackup;
+    uint64 public maxPriceAge;
+
+    address public registry;
+    bytes32 public termChecks;
+    bytes32 public termCredit;
+
+    // ─── Sanções + Termos ───
+    function _checkAccess(address user, bytes32 term) internal view {
+        if (registry != address(0)) {
+            // Sanção
+            (bool ok1, bytes memory ret1) = registry.staticcall(
+                abi.encodeWithSelector(ISuperReg.isSanctioned.selector, user)
+            );
+            if (ok1 && ret1.length == 32 && abi.decode(ret1, (bool))) revert ErrBan();
+
+            // Termo
+            if (term != bytes32(0)) {
+                (bool ok2, bytes memory ret2) = registry.staticcall(
+                    abi.encodeWithSelector(ISuperReg.hasAcceptedTerm.selector, user, term)
+                );
+                if (!(ok2 && ret2.length >= 128 && abi.decode(ret2, (bool)))) revert ErrAuth();
+            }
+        }
+    }
+
+    // ─── Oráculo ───
+    function polUsdPrice8() public view returns (uint256) {
+        (, int256 price1, , uint256 time1, ) = feedPrimary.latestRoundData();
+        if (price1 > 0 && time1 + maxPriceAge >= block.timestamp) {
+            return uint256(price1);
+        }
+        (, int256 price2, , uint256 time2, ) = feedBackup.latestRoundData();
+        if (!(price2 > 0 && time2 + maxPriceAge >= block.timestamp)) revert ErrStale();
+        return uint256(price2);
+    }
+
+    // ─── Swap ───
+    uint256 public sapoLiquidity;
+    event LiquidityDeposited(address token, uint256 amount);
+    event LiquidityWithdrawn(address token, uint256 amount);
+
+    function depositSwapSAPO(uint256 amt) external onlyOwner {
+        _safeTransferFrom(sapo, msg.sender, address(this), amt);
+        sapoLiquidity += amt;
+        emit LiquidityDeposited(sapo, amt);
+    }
+    function depositSwapETH() external payable onlyOwner {
+        emit LiquidityDeposited(address(0), msg.value);
+    }
+    function withdrawSwapSAPO(uint256 amt) external onlyOwner {
+        if (!paused) revert ErrPaused();
+        if (amt > sapoLiquidity) revert ErrLiq();
+        sapoLiquidity -= amt;
+        _safeTransfer(sapo, msg.sender, amt);
+        emit LiquidityWithdrawn(sapo, amt);
+    }
+    function withdrawSwapETH(uint256 amt) external onlyOwner {
+        if (!paused) revert ErrPaused();
+        (bool ok, ) = payable(msg.sender).call{value: amt}("");
+        require(ok, "eth");
+        emit LiquidityWithdrawn(address(0), amt);
+    }
+
+    event SwapEvt(address indexed user, bytes4 pair, uint256 inAmt, uint256 outAmt, uint256 feeAmt);
+
+    function polToSapo(uint256 minOut) external payable whenNotPaused nonReentrant {
+        uint256 rate  = polUsdPrice8();
+        uint256 usd8  = (msg.value * rate) / 1e18;
+        uint256 out   = (usd8 * SAPO_PER_USD) / 1e8;
+        uint256 fee   = (msg.value * swapFeeBps) / 10_000;
+
+        if (out < minOut) revert ErrSlip();
+        if (sapoLiquidity < out) revert ErrLiq();
+
+        sapoLiquidity -= out;
+        _safeTransfer(sapo, msg.sender, out);
+        emit SwapEvt(msg.sender, "POL>", msg.value, out, fee);
+    }
+
+    function sapoToPol(uint256 inSapo, uint256 minOutWei)
+        external whenNotPaused nonReentrant
+    {
+        if (inSapo == 0) revert ErrAmt();
+
+        uint256 rate  = polUsdPrice8();
+        uint256 usd8  = (inSapo * 1e8) / SAPO_PER_USD;
+        uint256 weiOut= (usd8 * 1e18) / rate;
+        uint256 fee   = (inSapo * swapFeeBps) / 10_000;
+
+        if (weiOut < minOutWei) revert ErrSlip();
+        if (address(this).balance < weiOut) revert ErrLiq();
+
+        _safeTransferFrom(sapo, msg.sender, address(this), inSapo + fee);
+        sapoLiquidity += inSapo;
+        (bool ok, ) = payable(msg.sender).call{value: weiOut}("");
+        require(ok, "send");
+
+        emit SwapEvt(msg.sender, ">POL", inSapo, weiOut, fee);
+    }
+
+    // ─── Tesouraria (spenders + caps) ───
+    mapping(address => bool)    public isSpender;
+    mapping(address => uint256) public dailyCap;
+    struct Window { uint64 start; uint192 spent; }
+    mapping(address => mapping(address => Window)) public spendWindow;
+    uint64 public constant DAY = 86400;
+
+    event SpenderSet(address spender, bool ok);
+    event DailyCapSet(address token, uint256 cap);
+    event Spent(address token, address to, uint256 amount, address by, bytes32 note);
+    event WindowReset(address token, address spender, uint64 at);
+
+    function setSpender(address s, bool ok) external onlyOwner {
+        if (s == address(0)) revert ErrZero();
+        isSpender[s] = ok;
+        emit SpenderSet(s, ok);
+    }
+    function setDailyCap(address token, uint256 cap_) external onlyOwner {
+        dailyCap[token] = cap_;
+        emit DailyCapSet(token, cap_);
+    }
+    function spend(
+        address       token,
+        address payable to,
+        uint256       amount,
+        bytes32       note
+    ) external whenNotPaused nonReentrant {
+        if (!isSpender[msg.sender]) revert ErrAuth();
+        if (to == address(0) || amount == 0) revert ErrAmt();
+        uint256 cap = dailyCap[token];
+        if (cap == 0) revert ErrCap();
+
+        Window storage W = spendWindow[token][msg.sender];
+        if (W.start == 0 || block.timestamp >= W.start + DAY) {
+            W.start = uint64(block.timestamp);
+            W.spent = 0;
+            emit WindowReset(token, msg.sender, W.start);
+        }
+        unchecked { W.spent += uint192(amount); }
+        if (uint256(W.spent) > cap) revert ErrCap();
+
+        if (token == address(0)) {
+            (bool ok, ) = to.call{value: amount}("");
+            require(ok, "eth");
+        } else {
+            _safeTransfer(token, to, amount);
+        }
+        emit Spent(token, to, amount, msg.sender, note);
+    }
+
+    // ─── Split payees + timelock ───
+    address public payeeA;
+    address public payeeB;
+    uint16  public payeeABps;
+
+    event PayeesSet(address A, address B, uint16 bpsA);
+    event Distributed(address token, uint256 total, uint256 toA, uint256 toB);
+
+    uint64 public constant MIN_DELAY2 = 24 hours;
+    uint64 public constant MAX_DELAY2 = 14 days;
+    mapping(bytes32 => uint64) public eta2;
+    mapping(bytes32 => bytes) public blob2;
+    event Op2Queued(bytes32 key, bytes4 typ);
+    event Op2Executed(bytes32 key, bytes4 typ);
+
+    function _queue2(bytes32 k, uint64 d) internal {
+        if (eta2[k] != 0) revert ErrExists();
+        uint64 dd = d < MIN_DELAY2 ? MIN_DELAY2 : d > MAX_DELAY2 ? MAX_DELAY2 : d;
+        eta2[k] = uint64(block.timestamp) + dd;
+        emit Op2Queued(k, bytes4(k));
+    }
+    function _exec2(bytes32 k) internal {
+        uint64 e = eta2[k];
+        if (e == 0 || block.timestamp < e) revert ErrNoOp();
+        delete eta2[k];
+        emit Op2Executed(k, bytes4(k));
+    }
+
+    function queueSetPayees(address a, address b, uint16 bpsA, uint64 d)
+        external onlyOwner returns (bytes32 k)
+    {
+        if (a==address(0)||b==address(0)||bpsA>10_000) revert ErrAmt();
+        k = keccak256(abi.encode("payees", a, b, bpsA, address(this)));
+        blob2[k] = abi.encode(a, b, bpsA);
+        _queue2(k, d);
+    }
+    function execSetPayees(bytes32 k) external onlyOwner {
+        _exec2(k);
+        (address a, address b, uint16 bpsA) = abi.decode(blob2[k], (address,address,uint16));
+        delete blob2[k];
+        payeeA   = a;
+        payeeB   = b;
+        payeeABps= bpsA;
+        emit PayeesSet(a, b, bpsA);
+    }
+
+    function queueSetFees(uint16 m, uint16 s, uint64 d)
+        external onlyOwner returns (bytes32 k)
+    {
+        if(m>MAX_FEE_BPS||s>MAX_FEE_BPS) revert ErrBps();
+        k = keccak256(abi.encode("fees", m, s, address(this)));
+        blob2[k] = abi.encode(m, s);
+        _queue2(k, d);
+    }
+    function execSetFees(bytes32 k) external onlyOwner {
+        _exec2(k);
+        (marketFeeBps, swapFeeBps) = abi.decode(blob2[k], (uint16,uint16));
+        delete blob2[k];
+    }
+
+    function queueSetRegistry(address r, bytes32 tCk, bytes32 tCr, uint64 d)
+        external onlyOwner returns (bytes32 k)
+    {
+        k = keccak256(abi.encode("reg", r, tCk, tCr, address(this)));
+        blob2[k] = abi.encode(r, tCk, tCr);
+        _queue2(k, d);
+    }
+    function execSetRegistry(bytes32 k) external onlyOwner {
+        _exec2(k);
+        (registry, termChecks, termCredit) = abi.decode(blob2[k], (address,bytes32,bytes32));
+        delete blob2[k];
+    }
+
+    function distributeTwo(address token)
+        external onlyOwner whenNotPaused nonReentrant
+    {
+        address a = payeeA;
+        address b = payeeB;
+        if (a==address(0)||b==address(0)) revert ErrNoOp();
+        uint256 bal = token==address(0)
+            ? address(this).balance
+            : IERC20(token).balanceOf(address(this));
+        if (bal==0) revert ErrAmt();
+        uint256 toA = (bal * payeeABps) / 10_000;
+        uint256 toB = bal - toA;
+        if (token==address(0)) {
+            (bool ok, ) = payable(a).call{value: toA}("");
+            require(ok,"A");
+            (ok,) = payable(b).call{value: toB}("");
+            require(ok,"B");
+        } else {
+            _safeTransfer(token, a, toA);
+            _safeTransfer(token, b, toB);
+        }
+        emit Distributed(token, bal, toA, toB);
+    }
+
+    // ─── Cheques on-chain ───
+    enum CheckStatus { NONE, ISSUED, ENDORSED, CASHED, CANCELLED }
+    struct Check {
+        address issuer;
+        address payee;
+        address token;
+        uint128 amount;
+        uint64  expiry;
+        uint8   status;
+    }
+    mapping(bytes32 => Check) public checks;
+
+    event CheckIssued(bytes32 id, address issuer, address payee, address token, uint256 amount, uint64 expiry);
+    event CheckEndorsed(bytes32 id, address from, address to);
+    event CheckCashed(bytes32 id, address to, uint256 amount);
+    event CheckCancelled(bytes32 id);
+
+    function _checkId(
+        address issuer,
+        address payee,
+        address token,
+        uint256 amount,
+        uint64  expiry,
+        uint256 nonce
+    ) internal view returns (bytes32) {
+        return keccak256(abi.encodePacked("CHECK",issuer,payee,token,amount,expiry,nonce,address(this)));
+    }
+
+    function issueCheck(
+        address payee,
+        address token,
+        uint256 amount,
+        uint64  expiry,
+        uint256 nonce,
+        bytes32 instHash
+    ) external payable whenNotPaused nonReentrant {
+        _checkAccess(msg.sender, termChecks);
+        if (payee==address(0) || amount==0 || expiry<=block.timestamp) revert ErrAmt();
+        bytes32 id = _checkId(msg.sender,payee,token,amount,expiry,nonce);
+        if (checks[id].status!=0) revert ErrExists();
+
+        // lock funds
+        if (token==address(0)) {
+            if (msg.value!=amount) revert ErrAmt();
+        } else {
+            if (msg.value!=0) revert ErrAmt();
+            _safeTransferFrom(token,msg.sender,address(this),amount);
+        }
+
+        checks[id] = Check({
+            issuer: msg.sender,
+            payee:  payee,
+            token:  token,
+            amount: uint128(amount),
+            expiry: expiry,
+            status: uint8(CheckStatus.ISSUED)
+        });
+        emit CheckIssued(id, msg.sender, payee, token, amount, expiry);
+
+        if (registry!=address(0) && instHash!=bytes32(0)) {
+            (bool ok,) = registry.call(abi.encodeWithSelector(
+                ISuperReg.registerInstrument.selector,
+                id, uint8(1), instHash, msg.sender, payee
+            ));
+            require(ok,"reg");
+        }
+    }
+    function endorseCheck(bytes32 id, address newPayee) external whenNotPaused {
+        Check storage C = checks[id];
+        if (C.status!=uint8(CheckStatus.ISSUED) && C.status!=uint8(CheckStatus.ENDORSED)) revert ErrNoOp();
+        if (msg.sender != C.payee) revert ErrAuth();
+        C.payee = newPayee;
+        C.status = uint8(CheckStatus.ENDORSED);
+        emit CheckEndorsed(id, msg.sender, newPayee);
+
+        if (registry!=address(0)) {
+            (bool ok,) = registry.call(abi.encodeWithSelector(
+                ISuperReg.setInstrumentStatus.selector,
+                id, uint8(2), bytes32("ENDORSED")
+            ));
+            require(ok,"reg");
+        }
+    }
+    function cashCheck(bytes32 id, address to) external whenNotPaused nonReentrant {
+        Check storage C = checks[id];
+        if (C.status==0
+         || C.status==uint8(CheckStatus.CASHED)
+         || C.status==uint8(CheckStatus.CANCELLED)
+        ) revert ErrNoOp();
+        if (block.timestamp > C.expiry) revert ErrNoOp();
+        if (msg.sender != C.payee) revert ErrAuth();
+        C.status = uint8(CheckStatus.CASHED);
+
+        if (C.token==address(0)) {
+            (bool ok, ) = payable(to).call{value: C.amount}("");
+            require(ok,"eth");
+        } else {
+            _safeTransfer(C.token, to, C.amount);
+        }
+        emit CheckCashed(id, to, C.amount);
+
+        if (registry!=address(0)) {
+            (bool ok,) = registry.call(abi.encodeWithSelector(
+                ISuperReg.setInstrumentStatus.selector,
+                id, uint8(3), bytes32("CASHED")
+            ));
+            require(ok,"reg");
+        }
+    }
+    function cancelCheck(bytes32 id) external whenNotPaused nonReentrant {
+        Check storage C = checks[id];
+        if (C.status==0
+         || C.status==uint8(CheckStatus.CASHED)
+         || C.status==uint8(CheckStatus.CANCELLED)
+        ) revert ErrNoOp();
+        if (msg.sender != C.issuer) revert ErrAuth();
+        if (block.timestamp <= C.expiry) revert ErrNoOp();
+        C.status = uint8(CheckStatus.CANCELLED);
+
+        if (C.token==address(0)) {
+            (bool ok, ) = payable(C.issuer).call{value: C.amount}("");
+            require(ok,"eth");
+        } else {
+            _safeTransfer(C.token, C.issuer, C.amount);
+        }
+        emit CheckCancelled(id);
+
+        if (registry!=address(0)) {
+            (bool ok,) = registry.call(abi.encodeWithSelector(
+                ISuperReg.setInstrumentStatus.selector,
+                id, uint8(4), bytes32("CANCELLED")
+            ));
+            require(ok,"reg");
+        }
+    }
+
+    // ─── Empréstimos ETH → SAPO ───
+    uint256 public borrowIndex;
+    uint64  public lastAccrual;
+    uint16  public borrowAPRbps = 1200; // 12% a.a.
+
+    uint16 public constant LTV_BPS       = 5000; // 50%
+    uint16 public constant LIQ_BPS       = 6500; // 65%
+    uint16 public constant LIQ_BONUS_BPS = 1000; // 10%
+
+    struct Position {
+        uint128 principal;
+        uint128 index;
+        uint256 ethCollateral;
+    }
+    mapping(address=>Position) public pos;
+
+    event Accrued(uint256 newBorrowIndex, uint64 at);
+    event CollateralDeposited(address user, uint256 weiAmt);
+    event CollateralWithdrawn(address user, uint256 weiAmt);
+    event Borrowed(address user, uint256 sapoOut);
+    event Repaid(address user, uint256 sapoIn);
+    event Liquidated(address user, address liquidator, uint256 repaySapo, uint256 ethSeized);
+
+    function _accrue() internal {
+        uint64 nowTs = uint64(block.timestamp);
+        if (nowTs == lastAccrual) return;
+        uint256 dt = nowTs - lastAccrual;
+        uint256 rb = 1e18 + (uint256(borrowAPRbps) * 1e18 * dt) / (10000 * 365 days);
+        borrowIndex = (borrowIndex * rb) / 1e18;
+        lastAccrual = nowTs;
+        emit Accrued(borrowIndex, nowTs);
+    }
+
+    function _ethUsd(uint256 w) internal view returns (uint256) {
+        return (w * polUsdPrice8()) / 1e18;
+    }
+    function _sapoUsd(uint256 s) internal pure returns (uint256) {
+        return (s * 1e8) / SAPO_PER_USD;
+    }
+    function _debtOf(Position memory P) internal view returns (uint256) {
+        uint256 ix = P.index == 0 ? 1e18 : P.index;
+        return (uint256(P.principal) * borrowIndex) / ix;
+    }
+
+    function depositCollateral() external payable whenNotPaused nonReentrant {
+        _checkAccess(msg.sender, termCredit);
+        pos[msg.sender].ethCollateral += msg.value;
+        emit CollateralDeposited(msg.sender, msg.value);
+    }
+
+    function withdrawCollateral(uint256 weiAmt) external whenNotPaused nonReentrant {
+        _accrue();
+        Position storage P = pos[msg.sender];
+        if (weiAmt == 0 || weiAmt > P.ethCollateral) revert ErrAmt();
+        P.ethCollateral -= weiAmt;
+        (uint256 c, uint256 d) = (_ethUsd(P.ethCollateral), _sapoUsd(_debtOf(P)));
+        if (d * 10000 > c * LTV_BPS) revert ErrLiq();
+        (bool ok, ) = payable(msg.sender).call{value: weiAmt}("");
+        require(ok, "eth");
+        emit CollateralWithdrawn(msg.sender, weiAmt);
+    }
+
+    function borrow(uint256 sapoOut) external whenNotPaused nonReentrant {
+        if (sapoOut == 0) revert ErrAmt();
+        _checkAccess(msg.sender, termCredit);
+        _accrue();
+        Position storage P = pos[msg.sender];
+        uint256 debt = _debtOf(P);
+        uint256 maxUsd8 = (_ethUsd(P.ethCollateral) * LTV_BPS) / 10000;
+        uint256 curUsd8 = _sapoUsd(debt);
+        uint256 addUsd8 = _sapoUsd(sapoOut);
+        if (curUsd8 + addUsd8 > maxUsd8) revert ErrLiq();
+
+        uint256 newDebt = debt + sapoOut;
+        P.principal = uint128(newDebt);
+        P.index     = uint128(borrowIndex);
+
+        if (sapoLiquidity < sapoOut) revert ErrLiq();
+        sapoLiquidity -= sapoOut;
+        _safeTransfer(sapo, msg.sender, sapoOut);
+        emit Borrowed(msg.sender, sapoOut);
+    }
+
+    function repay(uint256 sapoIn) external whenNotPaused nonReentrant {
+        if (sapoIn == 0) revert ErrAmt();
+        _accrue();
+        Position storage P = pos[msg.sender];
+        uint256 debt = _debtOf(P);
+        if (sapoIn > debt) sapoIn = debt;
+        _safeTransferFrom(sapo, msg.sender, address(this), sapoIn);
+        sapoLiquidity += sapoIn;
+        uint256 newDebt = debt - sapoIn;
+        P.principal = uint128(newDebt);
+        P.index     = uint128(borrowIndex);
+        emit Repaid(msg.sender, sapoIn);
+    }
+
+    function liquidate(address user, uint256 repaySapo)
+        external whenNotPaused nonReentrant
+    {
+        _accrue();
+        Position storage P = pos[user];
+        uint256 debt = _debtOf(P);
+        if (debt == 0) revert ErrNoOp();
+        (uint256 cUsd8, uint256 dUsd8) = (_ethUsd(P.ethCollateral), _sapoUsd(debt));
+        if (dUsd8 * 10000 <= cUsd8 * LIQ_BPS) revert ErrLiq();
+        if (repaySapo > debt) repaySapo = debt;
+
+        _safeTransferFrom(sapo, msg.sender, address(this), repaySapo);
+        sapoLiquidity += repaySapo;
+
+        uint256 repayUsd8 = _sapoUsd(repaySapo);
+        uint256 rate8     = polUsdPrice8();
+        uint256 weiEq     = (repayUsd8 * 1e18) / rate8;
+        uint256 bonusWei  = (weiEq * LIQ_BONUS_BPS) / 10_000;
+        uint256 seize     = weiEq + bonusWei;
+        if (seize > P.ethCollateral) seize = P.ethCollateral;
+
+        P.ethCollateral -= seize;
+        uint256 newDebt = debt - repaySapo;
+        P.principal = uint128(newDebt);
+        P.index     = uint128(borrowIndex);
+
+        (bool ok, ) = payable(msg.sender).call{value: seize}("");
+        require(ok, "eth");
+        emit Liquidated(user, msg.sender, repaySapo, seize);
+    }
+
+    receive() external payable {}
+}

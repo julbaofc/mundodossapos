@@ -1,0 +1,21 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./SapoCore.sol";
+
+contract SapoEquipment is SapoCore {
+    struct EquipmentState {
+        address frogs;
+        address registry;
+        address metaRegistry;
+    }
+    EquipmentState public equipmentState;
+
+    constructor(address _owner) SapoCore(_owner) {}
+
+    function setEquipmentLinks(address _frogs, address _registry, address _metaRegistry) external onlyOwner {
+        equipmentState.frogs = _frogs;
+        equipmentState.registry = _registry;
+        equipmentState.metaRegistry = _metaRegistry;
+    }
+}

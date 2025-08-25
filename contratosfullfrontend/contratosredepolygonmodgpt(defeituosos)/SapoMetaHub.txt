@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./SapoCore.sol";
+
+contract SapoMetaHub is SapoCore {
+    address public registry;
+    constructor(address _owner) SapoCore(_owner) {}
+    function setRegistry(address _registry) external onlyOwner { registry = _registry; }
+}

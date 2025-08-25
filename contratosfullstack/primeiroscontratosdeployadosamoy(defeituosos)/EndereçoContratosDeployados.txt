@@ -1,0 +1,4 @@
+Polygon Amoy(Testes)
+endereço contrato do SapoToken 0x820bcDc927f5cC9b858b563fed254388139B1F13
+endereço contrato do SapoItems 0x81b529331fa8dd66114947771720c70ed3d2f9bd
+endereço contrato do SapoMarketplace 0x47542778a4367D024Dd9Ea47Be2Ea5A85fefF21a

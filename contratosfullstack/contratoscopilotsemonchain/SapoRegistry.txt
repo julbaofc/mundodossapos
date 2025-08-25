@@ -1,0 +1,130 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SuperRegistry {
+    // ==== Códigos de erro ====
+    error E(uint8); 
+    // 1 Auth, 2 Paused, 3 Zero, 4 Exists, 5 NoOp, 6 Role, 7 Frozen, 8 Bound, 9 Active
+
+    // ==== Controle de propriedade e pausa ====
+    address public owner;
+    bool    public paused;
+
+    modifier onlyOwner() { if (msg.sender != owner) revert E(1); _; }
+    modifier whenNotPaused() { if (paused) revert E(2); _; }
+
+    event OwnershipTransferred(address indexed from, address indexed to);
+    event Paused(address indexed by);
+    event Unpaused(address indexed by);
+
+    constructor(address _owner) {
+        if (_owner == address(0)) revert E(3);
+        owner = _owner;
+    }
+
+    function transferOwnership(address to) external onlyOwner {
+        if (to == address(0)) revert E(3);
+        emit OwnershipTransferred(owner, to);
+        owner = to;
+    }
+    function pause() external onlyOwner { paused = true; emit Paused(msg.sender); }
+    function unpause() external onlyOwner { paused = false; emit Unpaused(msg.sender); }
+
+    // ==== Store unificado ====
+    enum RecordType { Entry, Role, PlayerWallet, WalletPlayer, Term, Acceptance }
+    mapping(bytes32 => bytes32) internal store;
+
+    function _key(RecordType t, bytes32 id) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(t, id));
+    }
+
+    // ==== Timelock ====
+    mapping(bytes32 => uint40) public eta;
+    event OperationQueued(bytes32 key, uint40 eta);
+    event OperationExecuted(bytes32 key);
+
+    function _queue(bytes32 key, uint40 delay) internal {
+        if (delay == 0) revert E(3);
+        uint40 when_ = uint40(block.timestamp) + delay;
+        if (eta[key] != 0) revert E(4);
+        eta[key] = when_;
+        emit OperationQueued(key, when_);
+    }
+    function _execute(bytes32 key) internal {
+        uint40 e = eta[key];
+        if (e == 0 || block.timestamp < e) revert E(5);
+        delete eta[key];
+        emit OperationExecuted(key);
+    }
+
+    // ==== Dispatcher genérico ====
+    event DataUpdated(uint8 recordType, bytes32 id, bytes32 data);
+    function _dispatch(RecordType t, bytes32 id, bytes32 blob) internal {
+        store[_key(t, id)] = blob;
+        emit DataUpdated(uint8(t), id, blob);
+    }
+
+    // ==== Entries (1 slot) ====
+    function setEntry(uint32 id, address addr, bytes12 chash, uint24 version, uint8 flags, uint40 updated) external onlyOwner {
+        _dispatch(RecordType.Entry, bytes32(uint256(id)), bytes32(abi.encodePacked(addr, updated, version, flags, chash)));
+    }
+    function getEntry(uint32 id) external view returns (address addr, uint40 updated, uint24 version, uint8 flags, bytes12 chash) {
+        bytes32 packed = store[_key(RecordType.Entry, bytes32(uint256(id)))];
+        assembly {
+            addr := shr(96, packed)
+            updated := shr(56, shl(160, packed))
+            version := shr(232, shl(200, packed))
+            flags := shr(240, shl(224, packed))
+            chash := shl(0, packed)
+        }
+    }
+
+    // ==== Roles ====
+    function setRole(address who, uint256 mask) external onlyOwner {
+        _dispatch(RecordType.Role, bytes32(uint256(uint160(who))), bytes32(mask));
+    }
+    function getRole(address who) external view returns (uint256) {
+        return uint256(store[_key(RecordType.Role, bytes32(uint256(uint160(who))))]);
+    }
+
+    // ==== Players ====
+    function bindSelf(uint32 playerId) external whenNotPaused {
+        bytes32 playerKey = _key(RecordType.PlayerWallet, bytes32(uint256(playerId)));
+        if (store[playerKey] != 0) revert E(4);
+        store[playerKey] = bytes32(uint256(uint160(msg.sender)));
+        _dispatch(RecordType.WalletPlayer, bytes32(uint256(uint160(msg.sender))), bytes32(uint256(playerId)));
+    }
+    function getPlayerWallet(uint32 playerId) external view returns (address) {
+        return address(uint160(uint256(store[_key(RecordType.PlayerWallet, bytes32(uint256(playerId)))])));
+    }
+    function getWalletPlayer(address wallet) external view returns (uint32) {
+        return uint32(uint256(store[_key(RecordType.WalletPlayer, bytes32(uint256(uint160(wallet))))]));
+    }
+
+    // ==== Terms ====
+    function setTerm(uint32 termId, bytes12 hash, uint32 defaultWindow, uint24 version, uint8 flags) external onlyOwner {
+        _dispatch(RecordType.Term, bytes32(uint256(termId)), bytes32(abi.encodePacked(hash, defaultWindow, version, flags)));
+    }
+    function getTerm(uint32 termId) external view returns (bytes12 hash, uint32 defaultWindow, uint24 version, uint8 flags) {
+        bytes32 packed = store[_key(RecordType.Term, bytes32(uint256(termId)))];
+        assembly {
+            hash := shr(96, packed)
+            defaultWindow := shr(64, shl(96, packed))
+            version := shr(232, shl(160, packed))
+            flags := shr(240, shl(184, packed))
+        }
+    }
+
+    // ==== Acceptances ====
+    function acceptTerm(address who, uint32 termId, uint40 time, uint40 validUntil, uint24 version) external onlyOwner {
+        _dispatch(RecordType.Acceptance, keccak256(abi.encodePacked(who, termId)), bytes32(abi.encodePacked(time, validUntil, version)));
+    }
+    function getAcceptance(address who, uint32 termId) external view returns (uint40 time, uint40 validUntil, uint24 version) {
+        bytes32 packed = store[_key(RecordType.Acceptance, keccak256(abi.encodePacked(who, termId)))];
+        assembly {
+            time := shr(216, packed)
+            validUntil := shr(176, shl(40, packed))
+            version := shr(232, shl(80, packed))
+        }
+    }
+}

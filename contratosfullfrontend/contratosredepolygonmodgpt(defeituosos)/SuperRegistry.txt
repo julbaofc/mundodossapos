@@ -1,0 +1,334 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/*
+  SuperRegistry — versão otimizada com bit/byte packing de storage
+  (Gerado para redução de slots / custo sem perder comportamento)
+*/
+contract SuperRegistry {
+    // Errors
+    error ErrAuth();
+    error ErrPaused();
+    error ErrZero();
+    error ErrExists();
+    error ErrNoOp();
+    error ErrRole();
+    error ErrFrozen();
+    error ErrBound();
+    error ErrActive();
+
+    // Core
+    address public owner;
+    address public pendingOwner;
+    bool    public paused;
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert ErrAuth();
+        _;
+    }
+    modifier whenNotPaused() {
+        if (paused) revert ErrPaused();
+        _;
+    }
+
+    event OwnershipTransferStarted(address indexed from, address indexed to);
+    event OwnershipTransferred(address indexed from, address indexed to);
+    event Paused(address indexed by);
+    event Unpaused(address indexed by);
+
+    constructor(address _owner) {
+        if (_owner == address(0)) revert ErrZero();
+        owner = _owner;
+    }
+    function transferOwnership(address to) external onlyOwner {
+        if (to == address(0)) revert ErrZero();
+        pendingOwner = to;
+        emit OwnershipTransferStarted(owner, to);
+    }
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert ErrAuth();
+        address old = owner;
+        owner = pendingOwner;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(old, owner);
+    }
+    function pause()   external onlyOwner { paused = true;  emit Paused(msg.sender); }
+    function unpause() external onlyOwner { paused = false; emit Unpaused(msg.sender); }
+
+    // IDs Canônicos
+    bytes32 public constant ID_SAPO_TOKEN   = keccak256("SAPO_TOKEN");
+    bytes32 public constant ID_SAPO_FINANCE = keccak256("SAPO_FINANCE");
+    bytes32 public constant ID_SAPO_GAMEHUB = keccak256("SAPO_GAME_HUB");
+    bytes32 public constant ID_FROG_NFT     = keccak256("FROG_NFT");
+    bytes32 public constant ID_EQUIP_1155   = keccak256("EQUIP_1155");
+    bytes32 public constant ID_REGISTRY     = keccak256("REGISTRY");
+
+    // Entry packing
+    struct EntryPacked {
+        bytes32 chash;              // slot 0
+        uint256 auvf;               // slot 1: [addr(160) | updated(64) | ver(31) | frozen(1)]
+    }
+    mapping(bytes32 => EntryPacked) private _entries; // (compat: use entriesView)
+
+    event Registered(bytes32 indexed id, address addr, bytes32 chash, uint32 ver, uint64 when);
+    event Frozen(bytes32 indexed id);
+
+    uint256 private constant ENTRY_ADDR_MASK = (uint256(1) << 160) - 1;
+    uint256 private constant ENTRY_UPDATED_MASK = ((uint256(1) << 64) - 1) << 160;
+    uint256 private constant ENTRY_VER_MASK = ((uint256(1) << 31) - 1) << (160 + 64);
+    uint256 private constant ENTRY_FROZEN_MASK = uint256(1) << (160 + 64 + 31);
+
+    function _entryEncode(address a, uint64 updated, uint32 ver, bool frozen) private pure returns (uint256 u) {
+        uint256 ver31 = uint256(ver) & ((1 << 31) - 1);
+        u = uint256(uint160(a));
+        u |= uint256(updated) << 160;
+        u |= ver31 << (160 + 64);
+        if (frozen) u |= ENTRY_FROZEN_MASK;
+    }
+    function _entryDecode(uint256 u) private pure returns (address a, uint64 updated, uint32 ver, bool frozen) {
+        a = address(uint160(u & ENTRY_ADDR_MASK));
+        updated = uint64((u >> 160) & ((1 << 64) - 1));
+        uint32 v = uint32((u >> (160 + 64)) & ((1 << 31) - 1));
+        ver = v;
+        frozen = (u & ENTRY_FROZEN_MASK) != 0;
+    }
+
+    function _extcodehash(address addr_) internal view returns (bytes32 ch) {
+        assembly { ch := extcodehash(addr_) }
+    }
+
+    // Timelock básico
+    mapping(bytes32 => uint64) public eta;
+    event OpQueued(bytes32 indexed key, bytes4 op, uint64 eta);
+    event OpExecuted(bytes32 indexed key, bytes4 op);
+    event OpCancelled(bytes32 indexed key);
+
+    function _queue(bytes32 key, uint64 delay) internal {
+        if (delay == 0) revert ErrZero();
+        uint64 when_ = uint64(block.timestamp) + delay;
+        if (eta[key] != 0) revert ErrExists();
+        eta[key] = when_;
+        emit OpQueued(key, bytes4(key), when_);
+    }
+    function _exec(bytes32 key) internal {
+        uint64 e = eta[key];
+        if (e == 0 || block.timestamp < e) revert ErrNoOp();
+        delete eta[key];
+        emit OpExecuted(key, bytes4(key));
+    }
+    function cancelOp(bytes32 key) external onlyOwner {
+        if (eta[key] == 0) revert ErrNoOp();
+        delete eta[key];
+        emit OpCancelled(key);
+    }
+
+    function queueSet(bytes32 id, address newAddr, uint64 delay) external onlyOwner returns (bytes32 key) {
+        (, , , bool frozen) = _entryDecode(_entries[id].auvf);
+        if (frozen) revert ErrFrozen();
+        if (newAddr == address(0)) revert ErrZero();
+        key = keccak256(abi.encode("set", id, newAddr, address(this)));
+        _queue(key, delay);
+    }
+    function execSet(bytes32 key, bytes32 id, address newAddr) external onlyOwner whenNotPaused {
+        _exec(key);
+        EntryPacked storage e = _entries[id];
+        (, , , bool frozen) = _entryDecode(e.auvf);
+        if (frozen) revert ErrFrozen();
+        bytes32 ch = _extcodehash(newAddr);
+        if (ch == bytes32(0)) revert ErrNoOp();
+        ( , , uint32 ver, ) = _entryDecode(e.auvf);
+        unchecked { ver++; }
+        uint64 nowTs = uint64(block.timestamp);
+        e.chash = ch;
+        e.auvf = _entryEncode(newAddr, nowTs, ver, false);
+        emit Registered(id, newAddr, ch, ver, nowTs);
+    }
+    function queueFreeze(bytes32 id, uint64 delay) external onlyOwner returns (bytes32 key) {
+        (,, , bool frozen) = _entryDecode(_entries[id].auvf);
+        if (frozen) revert ErrFrozen();
+        key = keccak256(abi.encode("freeze", id, address(this)));
+        _queue(key, delay);
+    }
+    function execFreeze(bytes32 key, bytes32 id) external onlyOwner whenNotPaused {
+        _exec(key);
+        EntryPacked storage e = _entries[id];
+        (address a, uint64 u, uint32 v, ) = _entryDecode(e.auvf);
+        e.auvf = _entryEncode(a, u, v, true);
+        emit Frozen(id);
+    }
+
+    function get(bytes32 id) external view returns (address) {
+        (address a,,,) = _entryDecode(_entries[id].auvf);
+        return a;
+    }
+    function verifyAndGet(bytes32 id) external view returns (address a) {
+        EntryPacked storage e = _entries[id];
+        (a,,,) = _entryDecode(e.auvf);
+        require(a != address(0), "unset");
+        require(_extcodehash(a) == e.chash, "mismatch");
+    }
+    function entriesView(bytes32 id) external view returns (address addr, bytes32 chash, uint64 updated, uint32 ver, bool frozen) {
+        EntryPacked storage e = _entries[id];
+        (addr, updated, ver, frozen) = _entryDecode(e.auvf);
+        chash = e.chash;
+    }
+
+    // Roles (bitmask)
+    mapping(address => uint256) public roles;
+    uint256 public constant ROLE_VITALS        = 1 << 0;
+    uint256 public constant ROLE_DOCS          = 1 << 1;
+    uint256 public constant ROLE_VEHICLES      = 1 << 2;
+    uint256 public constant ROLE_ENV           = 1 << 3;
+    uint256 public constant ROLE_JUDICIAL      = 1 << 4;
+    uint256 public constant ROLE_TERMS         = 1 << 5;
+    uint256 public constant ROLE_PLAYER_ADMIN  = 1 << 6;
+    uint256 public constant ROLE_BANK          = 1 << 7;
+
+    event RoleUpdated(address indexed who, uint256 newMask);
+
+    function queueSetRole(address who, uint256 newMask, uint64 delay) external onlyOwner returns (bytes32 key) {
+        if (who == address(0)) revert ErrZero();
+        key = keccak256(abi.encode("role", who, newMask, address(this)));
+        _queue(key, delay);
+    }
+    function execSetRole(bytes32 key, address who, uint256 newMask) external onlyOwner whenNotPaused {
+        _exec(key);
+        roles[who] = newMask;
+        emit RoleUpdated(who, newMask);
+    }
+    function _requireRole(address who, uint256 bit) internal view {
+        if ((roles[who] & bit) == 0) revert ErrRole();
+    }
+
+    // Players
+    mapping(bytes32 => address) public playerWallet;
+    mapping(address => bytes32) public walletPlayer;
+    event PlayerBound(bytes32 indexed playerId, address indexed wallet);
+    event PlayerUnbound(bytes32 indexed playerId, address indexed wallet);
+
+    function bindSelf(bytes32 playerId) external whenNotPaused {
+        if (playerId == bytes32(0)
+         || walletPlayer[msg.sender] != bytes32(0)
+         || playerWallet[playerId] != address(0)
+        ) revert ErrExists();
+        playerWallet[playerId] = msg.sender;
+        walletPlayer[msg.sender]  = playerId;
+        emit PlayerBound(playerId, msg.sender);
+    }
+    function adminBind(bytes32 playerId, address wallet) external whenNotPaused {
+        _requireRole(msg.sender, ROLE_PLAYER_ADMIN);
+        if (playerId == bytes32(0) || wallet == address(0)) revert ErrZero();
+        if (playerWallet[playerId] != address(0)
+         || walletPlayer[wallet] != bytes32(0)
+        ) revert ErrExists();
+        playerWallet[playerId] = wallet;
+        walletPlayer[wallet]  = playerId;
+        emit PlayerBound(playerId, wallet);
+    }
+    function adminUnbind(bytes32 playerId) external whenNotPaused {
+        _requireRole(msg.sender, ROLE_PLAYER_ADMIN);
+        address w = playerWallet[playerId];
+        if (w == address(0)) revert ErrNoOp();
+        delete playerWallet[playerId];
+        delete walletPlayer[w];
+        emit PlayerUnbound(playerId, w);
+    }
+    function isPlayerWallet(bytes32 playerId, address w) external view returns (bool) {
+        return playerWallet[playerId] == w;
+    }
+
+    // Terms & acceptance (packed)
+    uint64 public constant MAX_TERM_WINDOW = 1 days;
+
+    struct TermPacked {
+        bytes32 hash;   // slot 0
+        uint256 meta;   // slot 1: [version(30) | active(1) | recurrent(1) | defaultWindow(32) | padding]
+    }
+    mapping(bytes32 => TermPacked) private _terms; // (compat: use termsView)
+
+    uint256 private constant TERM_DEFAULT_SHIFT = 0;                 // 32 bits
+    uint256 private constant TERM_RECURRENT_SHIFT = 32;              // 1 bit
+    uint256 private constant TERM_ACTIVE_SHIFT = 33;                 // 1 bit
+    uint256 private constant TERM_VERSION_SHIFT = 34;                // 30 bits
+
+    uint256 private constant TERM_DEFAULT_MASK = (uint256(1) << 32) - 1;
+    uint256 private constant TERM_RECURRENT_MASK = uint256(1) << TERM_RECURRENT_SHIFT;
+    uint256 private constant TERM_ACTIVE_MASK    = uint256(1) << TERM_ACTIVE_SHIFT;
+    uint256 private constant TERM_VERSION_MASK   = ((uint256(1) << 30) - 1) << TERM_VERSION_SHIFT;
+
+    event TermSet(bytes32 indexed termId, bytes32 hash, uint32 version, bool active, bool recurrent, uint32 defaultWindow);
+
+    function _termEncode(uint32 version, bool active, bool recurrent, uint32 defaultWindow) private pure returns (uint256 m) {
+        uint256 v30 = uint256(version) & ((1 << 30) - 1);
+        m = (uint256(defaultWindow) & TERM_DEFAULT_MASK) << TERM_DEFAULT_SHIFT;
+        if (recurrent) m |= TERM_RECURRENT_MASK;
+        if (active)    m |= TERM_ACTIVE_MASK;
+        m |= (v30 << TERM_VERSION_SHIFT);
+    }
+    function _termDecode(uint256 m) private pure returns (uint32 version, bool active, bool recurrent, uint32 defaultWindow) {
+        version = uint32((m & TERM_VERSION_MASK) >> TERM_VERSION_SHIFT);
+        active = (m & TERM_ACTIVE_MASK) != 0;
+        recurrent = (m & TERM_RECURRENT_MASK) != 0;
+        defaultWindow = uint32((m >> TERM_DEFAULT_SHIFT) & TERM_DEFAULT_MASK);
+    }
+
+    function setTerm(bytes32 termId, bytes32 docHash, bool active, bool recurrent, uint32 defaultWindowSec) external whenNotPaused {
+        // ROLE_TERMS opcional no registry original; aqui mantemos simples (owner)
+        if (msg.sender != owner) revert ErrAuth();
+        TermPacked storage t = _terms[termId];
+        (uint32 ver,,,) = _termDecode(t.meta);
+        if (active) {
+            unchecked { ver++; }
+            t.hash  = docHash;
+            t.meta  = _termEncode(ver, true, recurrent, recurrent ? defaultWindowSec : 0);
+        } else {
+            t.meta  = _termEncode(ver, false, false, 0);
+        }
+        (uint32 v2, bool a2, bool r2, uint32 d2) = _termDecode(t.meta);
+        emit TermSet(termId, t.hash, v2, a2, r2, d2);
+    }
+
+    struct AcceptancePacked { uint256 data; }
+    mapping(address => mapping(bytes32 => AcceptancePacked)) private _accepted; // (compat: use acceptedView)
+
+    event TermAccepted(address indexed who, bytes32 indexed termId, uint32 version, uint64 time, uint64 validUntil);
+
+    uint256 private constant ACC_VER_SHIFT = 0;    // 32 bits
+    uint256 private constant ACC_TIME_SHIFT = 32;  // 64 bits
+    uint256 private constant ACC_VALID_SHIFT = 96; // 64 bits
+
+    function _accEncode(uint32 version, uint64 time, uint64 validUntil) private pure returns (uint256 d) {
+        d = uint256(version);
+        d |= uint256(time) << ACC_TIME_SHIFT;
+        d |= uint256(validUntil) << ACC_VALID_SHIFT;
+    }
+    function _accDecode(uint256 d) private pure returns (uint32 version, uint64 time, uint64 validUntil) {
+        version = uint32(d & ((1 << 32) - 1));
+        time = uint64((d >> ACC_TIME_SHIFT) & ((uint256(1) << 64) - 1));
+        validUntil = uint64((d >> ACC_VALID_SHIFT) & ((uint256(1) << 64) - 1));
+    }
+
+    function acceptTerm(bytes32 termId, uint32 windowSec) external whenNotPaused {
+        TermPacked storage t = _terms[termId];
+        (uint32 v, bool active, bool recurrent, uint32 defaultWin) = _termDecode(t.meta);
+        if (!active || v == 0) revert ErrActive();
+        uint64 nowTs = uint64(block.timestamp);
+        uint64 valid  = 0;
+        if (recurrent) {
+            uint64 win = windowSec == 0 ? defaultWin : windowSec;
+            if (win == 0 || win > MAX_TERM_WINDOW) win = MAX_TERM_WINDOW;
+            valid = nowTs + win;
+        }
+        _accepted[msg.sender][termId].data = _accEncode(v, nowTs, valid);
+        emit TermAccepted(msg.sender, termId, v, nowTs, valid);
+    }
+
+    function termsView(bytes32 termId) external view returns (bytes32 hash, uint32 version, bool active, bool recurrent, uint32 defaultWindow) {
+        TermPacked storage t = _terms[termId];
+        (version, active, recurrent, defaultWindow) = _termDecode(t.meta);
+        hash = t.hash;
+    }
+    function acceptedView(address who, bytes32 termId) external view returns (uint32 version, uint64 time, uint64 validUntil) {
+        (version, time, validUntil) = _accDecode(_accepted[who][termId].data);
+    }
+}

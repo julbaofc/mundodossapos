@@ -1,0 +1,149 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * SapoUnified — versão final
+ * 
+ * Estrutura de namespaces (NS_...):
+ *  1  = NS_BAL        → saldos do token
+ *  2  = NS_ALLOW      → allowances do token
+ *  3  = NS_CF         → check.from
+ *  4  = NS_CT         → check.to
+ *  5  = NS_CTK        → check.token
+ *  6  = NS_CM         → check.meta (amount|expiry|flags)
+ *  7  = NS_GHA        → GameHub link A (finance|token)
+ *  8  = NS_GHB        → GameHub link B (frog|registry)
+ *  9  = NS_LS         → listing.seller
+ * 10  = NS_LM         → listing.meta (price|start|end)
+ * 11  = NS_EQF        → equip.frogs
+ * 12  = NS_EQR        → equip.registry
+ * 13  = NS_MR         → meta.registry
+ * 14  = NS_FL1        → frog.link1 (token|hub)
+ * 15  = NS_FL2        → frog.link2 (registry)
+ * 16  = NS_FS         → frog.stats
+ */
+
+contract SapoUnified {
+    // ===== Base SapoCore enxuta =====
+    error ErrAuth(); error ErrPaused(); error ErrZero();
+    error ErrExists(); error ErrNoOp(); error ErrActive();
+    error ErrOverflow();
+
+    address public owner; bool public paused;
+    modifier onlyOwner(){ if(msg.sender!=owner) revert ErrAuth(); _; }
+    modifier whenNotPaused(){ if(paused) revert ErrPaused(); _; }
+    uint256 private _lock; modifier nonReentrant(){ if(_lock==1) revert ErrActive(); _lock=1; _; _lock=0; }
+    mapping(bytes32 => bytes32) internal store;
+
+    constructor(address _owner){ if(_owner==address(0)) revert ErrZero(); owner=_owner; }
+
+    function pause() external onlyOwner { paused=true; }
+    function unpause() external onlyOwner { paused=false; }
+
+    // ===== Helpers =====
+    function _idAddr(address a) internal pure returns(bytes32){ return bytes32(uint256(uint160(a))); }
+    function _idPair(address a,address b) internal pure returns(bytes32){ return keccak256(abi.encodePacked(a,b)); }
+    function _ns(uint8 ns, bytes32 id) internal pure returns(bytes32){ return keccak256(abi.encodePacked(ns,id)); }
+    function _set(uint8 ns, bytes32 id, bytes32 val) internal { store[_ns(ns,id)] = val; }
+    function _get(uint8 ns, bytes32 id) internal view returns(bytes32){ return store[_ns(ns,id)]; }
+    function _pack2(address a,address b) internal pure returns(bytes32){ return bytes32((uint256(uint160(a))<<160)|uint256(uint160(b))); }
+    function _packListing(uint64 price,uint32 start,uint32 end) internal pure returns(bytes32){ return bytes32((uint256(price)<<64)|(uint256(start)<<32)|uint256(end)); }
+    function _unpackCheck(bytes32 p) internal pure returns(uint128,uint64,uint8){
+        uint256 u=uint256(p); return (uint128(u>>72), uint64((u>>8)&((1<<64)-1)), uint8(u&0xFF));
+    }
+
+    // ===== Token (ERC20 simplificado, decimals=0) =====
+    string public name; string public symbol; uint8 public immutable decimals=0;
+    uint256 public cap; uint256 public totalSupply;
+    event Transfer(address indexed from,address indexed to,uint256 value);
+    event Approval(address indexed owner,address indexed spender,uint256 value);
+    uint8 private constant NS_BAL=1; uint8 private constant NS_ALLOW=2;
+
+    function balanceOf(address who) public view returns(uint256){ return uint256(_get(NS_BAL,_idAddr(who))); }
+    function allowance(address o,address s) public view returns(uint256){ return uint256(_get(NS_ALLOW,_idPair(o,s))); }
+    function approve(address s,uint256 v) external whenNotPaused returns(bool){ _set(NS_ALLOW,_idPair(msg.sender,s),bytes32(v)); emit Approval(msg.sender,s,v); return true; }
+    function transfer(address to,uint256 v) external whenNotPaused returns(bool){ _transfer(msg.sender,to,v); return true; }
+    function transferFrom(address f,address t,uint256 v) external whenNotPaused returns(bool){
+        bytes32 k=_idPair(f,msg.sender); uint256 a=uint256(_get(NS_ALLOW,k)); if(a<v) revert ErrNoOp();
+        unchecked{_set(NS_ALLOW,k,bytes32(a-v));} _transfer(f,t,v); return true;
+    }
+    function _transfer(address f,address t,uint256 v) internal {
+        if(t==address(0)) revert ErrZero();
+        bytes32 kf=_idAddr(f); bytes32 kt=_idAddr(t);
+        uint256 bf=uint256(_get(NS_BAL,kf)); if(bf<v) revert ErrNoOp();
+        unchecked{ _set(NS_BAL,kf,bytes32(bf-v)); _set(NS_BAL,kt,bytes32(uint256(_get(NS_BAL,kt))+v)); }
+        emit Transfer(f,t,v);
+    }
+    function mint(address to,uint256 v) external onlyOwner whenNotPaused {
+        if(to==address(0)) revert ErrZero(); uint256 ns=totalSupply+v;
+        if(ns>cap) revert ErrOverflow(); totalSupply=ns;
+        bytes32 kt=_idAddr(to); _set(NS_BAL,kt,bytes32(uint256(_get(NS_BAL,kt))+v));
+        emit Transfer(address(0),to,v);
+    }
+
+    // ===== Finance (checks) =====
+    uint8 private constant NS_CF=3; uint8 private constant NS_CT=4; uint8 private constant NS_CTK=5; uint8 private constant NS_CM=6;
+    function issueCheck(bytes32 id,address to,address token,uint128 amount,uint64 expiry,uint8 flags) external whenNotPaused {
+        if(to==address(0)||token==address(0)||amount==0) revert ErrZero();
+        if(address(uint160(uint256(_get(NS_CT,id))))!=address(0)) revert ErrExists();
+        _set(NS_CF,id,_idAddr(msg.sender)); _set(NS_CT,id,_idAddr(to)); _set(NS_CTK,id,_idAddr(token));
+        _set(NS_CM,id,bytes32((uint256(amount)<<72)|(uint256(expiry)<<8)|uint256(flags)));
+    }
+    function cashCheck(bytes32 id) external nonReentrant whenNotPaused {
+        if(msg.sender!=address(uint160(uint256(_get(NS_CT,id))))) revert ErrAuth();
+        (uint128 amt,uint64 exp,) = _unpackCheck(_get(NS_CM,id)); // flags ignorado → sem warning
+        if(exp!=0 && block.timestamp>exp) revert ErrNoOp();
+        address tok=address(uint160(uint256(_get(NS_CTK,id))));
+        _delCheck(id); _safeTransfer(tok,msg.sender,amt);
+    }
+    function _delCheck(bytes32 id) internal { _set(NS_CF,id,0); _set(NS_CT,id,0); _set(NS_CTK,id,0); _set(NS_CM,id,0); }
+    function _safeTransfer(address token,address to,uint256 amount) internal {
+        (bool ok,bytes memory data) = token.call(abi.encodeWithSelector(0xa9059cbb,to,amount));
+        if(!ok || (data.length!=0 && !abi.decode(data,(bool)))) revert ErrNoOp();
+    }
+
+    // ===== GameHub links e listings =====
+    uint8 private constant NS_GHA=7; uint8 private constant NS_GHB=8; uint8 private constant NS_LS=9; uint8 private constant NS_LM=10;
+    function setGameHubLinks(address fin,address tok,address frog,address reg) external onlyOwner {
+        _set(NS_GHA,bytes32(uint256(1)),_pack2(fin,tok)); _set(NS_GHB,bytes32(uint256(1)),_pack2(frog,reg));
+    }
+    function setListing(bytes32 id,address seller,uint64 price,uint32 start,uint32 end) external onlyOwner {
+        _set(NS_LS,id,_idAddr(seller)); _set(NS_LM,id,_packListing(price,start,end));
+    }
+
+    // ===== Equip links =====
+    uint8 private constant NS_EQF=11; uint8 private constant NS_EQR=12;
+    function setEquipLinks(address frogs,address reg) external onlyOwner {
+        _set(NS_EQF,bytes32(uint256(1)),_idAddr(frogs)); _set(NS_EQR,bytes32(uint256(1)),_idAddr(reg));
+    }
+
+    // ===== MetaHub registry =====
+    uint8 private constant NS_MR=13;
+    function setMetaRegistry(address reg) external onlyOwner { _set(NS_MR,bytes32(uint256(1)),_idAddr(reg)); }
+
+    // ===== FrogNFT links e stats =====
+    uint8 private constant NS_FL1=14; uint8 private constant NS_FL2=15; uint8 private constant NS_FS=16;
+
+    function setFrogLinks(address tok,address hub,address reg) external onlyOwner {
+        _set(NS_FL1,bytes32(uint256(1)),_pack2(tok,hub));
+        _set(NS_FL2,bytes32(uint256(1)),_idAddr(reg));
+    }
+
+    function setStats(uint256 id,uint64 power,uint64 speed,uint64 stamina,uint64 wins) external onlyOwner {
+        bytes32 p = bytes32(
+            (uint256(power)   << 192) |
+            (uint256(speed)   << 128) |
+            (uint256(stamina) << 64)  |
+            uint256(wins)
+        );
+        _set(NS_FS,bytes32(id),p);
+    }
+
+    function frogStats(uint256 id) external view returns(uint64 power,uint64 speed,uint64 stamina,uint64 wins){
+        uint256 p = uint256(_get(NS_FS,bytes32(id)));
+        power   = uint64(p >> 192);
+        speed   = uint64((p >> 128) & ((1 << 64) - 1));
+        stamina = uint64((p >> 64) & ((1 << 64) - 1));
+        wins    = uint64(p & ((1 << 64) - 1));
+    }
+}

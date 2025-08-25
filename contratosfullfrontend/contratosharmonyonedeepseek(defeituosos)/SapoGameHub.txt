@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./SapoCore.sol";
+
+contract SapoGameHub is SapoCore {
+    struct GameState {
+        address finance;
+        address sapoToken;
+        address frogNFT;
+        address registry;
+    }
+    GameState public gameState;
+
+    struct Listing {
+        address seller;
+        uint64 price;
+        uint32 start;
+        uint32 end;
+    }
+    mapping(bytes32 => Listing) public listings;
+
+    struct FrogStats {
+        uint64 vigor;
+        uint32 strength;
+        uint32 agility;
+        uint16 luck;
+        uint16 iq;
+        uint8 rank;
+        uint8 rarity;
+    }
+    mapping(uint256 => FrogStats) public frogStats;
+
+    event Linked(address finance, address token, address frog, address registry);
+    event ListingSet(bytes32 indexed id, address seller, uint64 price, uint32 start, uint32 end);
+    event StatsSet(uint256 indexed tokenId, FrogStats stats);
+
+    constructor(address _owner) SapoCore(_owner) {}
+
+    function setGameLinks(address _finance, address _sapoToken, address _frogNFT, address _registry) external onlyOwner {
+        gameState.finance = _finance;
+        gameState.sapoToken = _sapoToken;
+        gameState.frogNFT = _frogNFT;
+        gameState.registry = _registry;
+        emit Linked(_finance, _sapoToken, _frogNFT, _registry);
+    }
+
+    function setListing(bytes32 id, address seller, uint64 price, uint32 start, uint32 end) external onlyOwner whenNotPaused {
+        listings[id] = Listing(seller, price, start, end);
+        emit ListingSet(id, seller, price, start, end);
+    }
+
+    function setStats(uint256 tokenId, FrogStats calldata stats) external onlyOwner whenNotPaused {
+        frogStats[tokenId] = stats;
+        emit StatsSet(tokenId, stats);
+    }
+}

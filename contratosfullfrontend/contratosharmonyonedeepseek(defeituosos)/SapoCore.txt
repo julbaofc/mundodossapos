@@ -1,0 +1,90 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+abstract contract SapoCore {
+    // Errors
+    error ErrAuth();
+    error ErrPaused();
+    error ErrZero();
+    error ErrExists();
+    error ErrNoOp();
+    error ErrActive();
+    error ErrRole();
+    error ErrOverflow();
+
+    // Estado do contrato agrupado
+    struct ContractState {
+        address owner;
+        address pendingOwner;
+        bool paused;
+        uint8 _reentrancy;
+    }
+    ContractState public state;
+
+    modifier onlyOwner() {
+        if (msg.sender != state.owner) revert ErrAuth();
+        _;
+    }
+    modifier whenNotPaused() {
+        if (state.paused) revert ErrPaused();
+        _;
+    }
+
+    modifier nonReentrant() {
+        if (state._reentrancy == 1) revert ErrActive();
+        state._reentrancy = 1;
+        _;
+        state._reentrancy = 0;
+    }
+
+    event OwnershipTransferStarted(address indexed from, address indexed to);
+    event OwnershipTransferred(address indexed from, address indexed to);
+    event Paused(address indexed by);
+    event Unpaused(address indexed by);
+
+    constructor(address _owner) {
+        if (_owner == address(0)) revert ErrZero();
+        state.owner = _owner;
+    }
+
+    function transferOwnership(address to) external virtual onlyOwner {
+        if (to == address(0)) revert ErrZero();
+        state.pendingOwner = to;
+        emit OwnershipTransferStarted(state.owner, to);
+    }
+
+    function acceptOwnership() external virtual {
+        if (msg.sender != state.pendingOwner) revert ErrAuth();
+        address old = state.owner;
+        state.owner = state.pendingOwner;
+        state.pendingOwner = address(0);
+        emit OwnershipTransferred(old, state.owner);
+    }
+
+    function pause() external onlyOwner {
+        state.paused = true;
+        emit Paused(msg.sender);
+    }
+
+    function unpause() external onlyOwner {
+        state.paused = false;
+        emit Unpaused(msg.sender);
+    }
+
+    // SafeERC20 optimizado com assembly
+    function _safeTransfer(address token, address to, uint256 amount) internal {
+        if (token == address(0) || to == address(0)) revert ErrZero();
+        
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, 0xa9059cbb00000000000000000000000000000000000000000000000000000000)
+            mstore(add(ptr, 0x04), to)
+            mstore(add(ptr, 0x24), amount)
+            
+            let success := call(gas(), token, 0, ptr, 0x44, 0, 0)
+            if iszero(success) {
+                revert(0, 0)
+            }
+        }
+    }
+}

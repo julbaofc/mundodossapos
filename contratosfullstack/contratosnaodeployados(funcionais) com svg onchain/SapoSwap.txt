@@ -1,0 +1,89 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.30;
+
+interface ISapo {
+    function swapTransfer(address from, address to, uint24 value) external;
+    function balanceOf(address a) external view returns (uint256);
+}
+interface IFeeHub {
+    function feeBps()       external view returns (uint16);
+    function feeRecipient() external view returns (address);
+    function polUsdPrice8() external view returns (uint256);
+}
+
+contract SapoSwap {
+    // ctrl bits: [0..159]=owner,[248]=lock,[249]=paused]
+    uint256 private ctrl;
+
+    ISapo   public immutable sapo;
+    IFeeHub public immutable hub;
+    uint256 public constant SAPO_PER_USD = 10_000;
+
+    event Swap(address indexed user, bytes4 pair, uint256 inAmt, uint256 outAmt, uint256 feeAmt);
+    event Paused(address by);
+    event Unpaused(address by);
+    event ReceivedETH(address indexed sender, uint256 amount);
+
+    modifier onlyOwner()    { require(msg.sender == owner(), "auth"); _; }
+    modifier nonReentrant() { require(!_locked(), "reent"); _setLock(true); _; _setLock(false); }
+    modifier whenNotPaused(){ require(!_paused(), "ps"); _; }
+
+    constructor(address sapo_, address hub_) {
+        require(sapo_ != address(0) && hub_ != address(0), "0");
+        ctrl = uint256(uint160(msg.sender));
+        sapo = ISapo(sapo_);
+        hub  = IFeeHub(hub_);
+    }
+
+    // POL -> SAPO
+    function polToSapo() external payable nonReentrant whenNotPaused {
+        uint256 rate8 = hub.polUsdPrice8();
+        uint256 usd8  = (msg.value * rate8) / 1e18;
+        uint256 out   = (usd8 * SAPO_PER_USD) / 1e8;
+
+        uint16 bps = hub.feeBps(); require(bps <= 10_000, "max");
+        uint256 feeWei = (msg.value * bps) / 10_000;
+
+        require(sapo.balanceOf(address(this)) >= out, "liq");
+        sapo.swapTransfer(address(this), msg.sender, uint24(out));
+
+        if (feeWei > 0) {
+            (bool ok,) = payable(hub.feeRecipient()).call{value: feeWei}("");
+            require(ok, "fee");
+        }
+        emit Swap(msg.sender, "POL>", msg.value, out, feeWei);
+    }
+
+    // SAPO -> POL
+    function sapoToPol(uint24 sapoIn) external nonReentrant whenNotPaused {
+        require(sapoIn > 0, "in");
+        uint256 rate8  = hub.polUsdPrice8();
+        uint256 usd8   = (uint256(sapoIn) * 1e8) / SAPO_PER_USD;
+        uint256 weiOut = (usd8 * 1e18) / rate8;
+
+        uint16 bps = hub.feeBps(); require(bps <= 10_000, "max");
+        uint256 feeSap = (uint256(sapoIn) * bps) / 10_000;
+
+        require(address(this).balance >= weiOut, "liq");
+        sapo.swapTransfer(msg.sender, address(this), sapoIn + uint24(feeSap));
+
+        (bool ok,) = payable(msg.sender).call{value: weiOut}("");
+        require(ok, "send");
+        emit Swap(msg.sender, ">POL", sapoIn, weiOut, feeSap);
+    }
+
+    // rescue / receive
+    receive() external payable { emit ReceivedETH(msg.sender, msg.value); }
+    function rescueETH(address payable to, uint256 amt) external onlyOwner { to.transfer(amt); }
+
+    // admin
+    function owner() public view returns (address) { return address(uint160(ctrl)); }
+    function pause()   external onlyOwner { _setPaused(true);  emit Paused(msg.sender); }
+    function unpause() external onlyOwner { _setPaused(false); emit Unpaused(msg.sender); }
+
+    // ctrl bits
+    function _locked() private view returns (bool) { return ((ctrl >> 248) & 1) == 1; }
+    function _paused() private view returns (bool) { return ((ctrl >> 249) & 1) == 1; }
+    function _setLock(bool s) private { uint256 m = 1 << 248; ctrl = s ? (ctrl | m) : (ctrl & ~m); }
+    function _setPaused(bool s) private { uint256 m = 1 << 249; ctrl = s ? (ctrl | m) : (ctrl & ~m); }
+}

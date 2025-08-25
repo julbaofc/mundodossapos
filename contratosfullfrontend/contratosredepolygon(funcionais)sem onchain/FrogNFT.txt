@@ -1,0 +1,520 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/*
+  FrogNFT
+  - ERC721 minimal otimizado
+  - Stats vitais (vida, energia, fome, XP, nível, pontos)
+  - Breeding com taxa SAPO e suporte a “support” raro
+  - burnIfDead registra óbito
+  - Integração com SuperRegistry para registro de nascimentos/óbitos
+*/
+
+interface IERC20 {
+    function transferFrom(address f, address t, uint256 v) external returns (bool);
+}
+
+interface ISuperReg {
+    function registerBirth(uint256 childId, uint32 parentA, uint32 parentB, bytes32 details) external;
+    function registerDeath(uint256 frogId, bytes32 details) external;
+}
+
+contract FrogNFT {
+    error ErrAuth();
+    error ErrPaused();
+    error ErrZero();
+    error ErrNF();
+    error ErrOwn();
+    error ErrPts();
+    error ErrMax();
+    error ErrLvl();
+    error ErrCD();
+    error ErrGen();
+    error ErrEnergy();
+    error ErrURI();
+    error ErrRole();
+
+    // ─── Core ───
+    address public owner;
+    address public pendingOwner;
+    bool    public paused;
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert ErrAuth();
+        _;
+    }
+    modifier whenNotPaused() {
+        if (paused) revert ErrPaused();
+        _;
+    }
+    event OwnershipTransferStarted(address from,address to);
+    event OwnershipTransferred(address from,address to);
+    event Paused(address by);
+    event Unpaused(address by);
+
+    constructor(
+        address _owner,
+        address _sapoToken,
+        address _gameHub,
+        address _registry
+    ) {
+        if (_owner == address(0) || _sapoToken == address(0)) revert ErrZero();
+        owner       = _owner;
+        sapoToken   = _sapoToken;
+        gameHub     = _gameHub;
+        registry    = _registry;
+    }
+
+    function transferOwnership(address to) external onlyOwner {
+        if (to == address(0)) revert ErrZero();
+        pendingOwner = to;
+        emit OwnershipTransferStarted(owner, to);
+    }
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert ErrAuth();
+        address old = owner;
+        owner        = pendingOwner;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(old, owner);
+    }
+    function pause()   external onlyOwner { paused = true;  emit Paused(msg.sender); }
+    function unpause() external onlyOwner { paused = false; emit Unpaused(msg.sender); }
+
+    // ─── ERC721 minimal ───
+    string public constant name   = "Mundo dos Sapos";
+    string public constant symbol = "SAPOFROG";
+
+    mapping(uint256 => address) private _ownerOf;
+    mapping(address => uint256) private _balanceOf;
+    mapping(uint256 => address) private _getApproved;
+    mapping(address => mapping(address => bool)) private _isApprovedForAll;
+
+    event Transfer(address indexed from,address indexed to,uint256 indexed id);
+    event Approval(address indexed owner,address indexed to,uint256 indexed id);
+    event ApprovalForAll(address indexed owner,address indexed operator,bool approved);
+
+    function ownerOf(uint256 id) public view returns (address) {
+        address o = _ownerOf[id];
+        if (o == address(0)) revert ErrNF();
+        return o;
+    }
+    function balanceOf(address a) external view returns (uint256) {
+        return _balanceOf[a];
+    }
+    function getApproved(uint256 id) external view returns (address) {
+        return _getApproved[id];
+    }
+    function isApprovedForAll(address o, address op) external view returns (bool) {
+        return _isApprovedForAll[o][op];
+    }
+
+    function approve(address to, uint256 id) external whenNotPaused {
+        address o = ownerOf(id);
+        if (msg.sender != o && !_isApprovedForAll[o][msg.sender]) revert ErrAuth();
+        _getApproved[id] = to;
+        emit Approval(o, to, id);
+    }
+    function setApprovalForAll(address op, bool ok) external whenNotPaused {
+        _isApprovedForAll[msg.sender][op] = ok;
+        emit ApprovalForAll(msg.sender, op, ok);
+    }
+    function transferFrom(address from, address to, uint256 id) public whenNotPaused {
+        if (to == address(0)) revert ErrZero();
+        address o = ownerOf(id);
+        if (o != from) revert ErrOwn();
+        if (
+            msg.sender != o
+         && msg.sender != _getApproved[id]
+         && !_isApprovedForAll[o][msg.sender]
+        ) revert ErrAuth();
+        _getApproved[id] = address(0);
+        _ownerOf[id]     = to;
+        unchecked {
+            _balanceOf[from]--;
+            _balanceOf[to]++;
+        }
+        emit Transfer(from, to, id);
+    }
+    function safeTransferFrom(address f, address t, uint256 id) external {
+        transferFrom(f, t, id);
+        _checkERC721Received(f, t, id, "");
+    }
+    function safeTransferFrom(address f, address t, uint256 id, bytes calldata data) external {
+        transferFrom(f, t, id);
+        _checkERC721Received(f, t, id, data);
+    }
+
+    function _mintFrog(address to) internal returns (uint256 id) {
+        if (to == address(0)) revert ErrZero();
+        id = _nextId++;
+        _ownerOf[id] = to;
+        _balanceOf[to]++;
+        emit Transfer(address(0), to, id);
+    }
+
+    function _checkERC721Received(address from, address to, uint256 id, bytes memory data) private {
+        if (to.code.length == 0) return;
+        bytes4 retval;
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, 0x150b7a02)
+            mstore(add(ptr, 4), caller())
+            mstore(add(ptr, 36), from)
+            mstore(add(ptr, 68), id)
+            mstore(add(ptr,100), 0x20)
+            mstore(add(ptr,132), mload(data))
+            mstore(add(ptr,164), mload(add(data,0x20)))
+            let ok := call(gas(), to, 0, ptr, add(164, mload(data)), ptr, 0x20)
+            if iszero(ok) { revert(0,0) }
+            retval := mload(ptr)
+        }
+        if (retval != bytes4(0x150b7a02)) revert ErrAuth();
+    }
+
+    // ─── Royalties (ERC-2981 minimal) ───
+    address private _royaltyReceiver;
+    uint96  private _royaltyBps; // out of 10_000
+
+    function royaltyInfo(uint256, uint256 salePrice)
+        external view
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        receiver       = _royaltyReceiver;
+        royaltyAmount  = (salePrice * _royaltyBps) / 10_000;
+    }
+    function setRoyalty(address recv, uint96 bps) external onlyOwner {
+        if (recv == address(0) || bps > 1_000) revert ErrAuth();
+        _royaltyReceiver = recv;
+        _royaltyBps      = bps;
+    }
+
+    // ─── Stats Vitais ───
+    enum Rarity { Free, Common, Uncommon, Rare }
+    struct Stats {
+        uint16 atk;
+        uint16 def;
+        uint16 vel;
+        uint16 lifeCur;
+        uint16 lifeMax;
+        uint16 energyCur;
+        uint16 energyMax;
+        uint16 hungerCur;
+        uint16 hungerMax;
+        uint32 xp;
+        uint32 lastUpdate;
+        uint64 lastBreed;
+        uint8  rarity;
+        uint8  pointsSpent;
+        uint8  levelSnap;
+        uint8  generation;
+    }
+    mapping(uint256 => Stats) public frogStats;
+
+    uint256 private _nextId = 1;
+
+    event FrogMinted(address to, uint256 id, uint8 rarity);
+    event PointsAllocated(uint256 id, uint16 atk, uint16 def, uint16 vel);
+    event Bred(address user, uint256 a, uint256 b, uint256 child, uint256 feeSap, bool support);
+    event FrogBurned(uint256 id);
+
+    // Parâmetros
+    uint64 public constant BREED_COOLDOWN   = 12 hours;
+    uint8  public constant MAX_GENERATION   = 8;
+    uint16 public constant BREED_ENERGY     = 30;
+    uint32 public constant BREED_BASE_SAPO  = 1000;
+
+    address public sapoToken;
+    address public gameHub;
+    address public registry;
+
+    event HubSet(address hub);
+    event RegistrySet(address reg);
+
+    function setGameHub(address hub) external onlyOwner {
+        if (hub == address(0)) revert ErrZero();
+        gameHub = hub;
+        emit HubSet(hub);
+    }
+    function setRegistry(address reg) external onlyOwner {
+        registry = reg;
+        emit RegistrySet(reg);
+    }
+
+    // Helpers internos para caps/regeneração e nível
+    function _baseVitals(Rarity r) internal pure returns (uint16) {
+        if (r == Rarity.Free)     return 75;
+        if (r == Rarity.Common)   return 90;
+        if (r == Rarity.Uncommon) return 120;
+        return 150;
+    }
+    function _caps(Rarity r) internal pure returns (uint16 sumMax, uint16 perMax) {
+        if (r == Rarity.Free)     return (15,9);
+        if (r == Rarity.Common)   return (18,12);
+        if (r == Rarity.Uncommon) return (21,15);
+        return (24,18);
+    }
+    function levelOf(uint256 id) public view returns (uint8 lvl) {
+        uint32 xp = frogStats[id].xp;
+        lvl = 1;
+        uint32 acc = 0;
+        while (true) {
+            uint32 need = 15 * lvl;
+            if (xp < acc + need || lvl == 30) break;
+            acc += need;
+            lvl++;
+        }
+    }
+    function _availPoints(uint8 lvl, uint8 spent) internal pure returns (uint8) {
+        uint8 total = lvl / 3;
+        return total > spent ? total - spent : 0;
+    }
+    function _syncVitals(uint256 id) internal {
+        Stats storage S = frogStats[id];
+        uint32 last = S.lastUpdate;
+        if (last == 0) {
+            S.lastUpdate = uint32(block.timestamp);
+            return;
+        }
+        uint32 dt = uint32(block.timestamp) - last;
+        if (dt == 0) return;
+
+        // Hunger decay
+        uint32 hungerDecay = dt / 300;
+        if (hungerDecay > 0) {
+            S.hungerCur = S.hungerCur > hungerDecay ? S.hungerCur - uint16(hungerDecay) : 0;
+        }
+        // Life
+        if (S.hungerCur == 0) {
+            uint32 lifeDecay = dt / 600;
+            if (lifeDecay > 0) {
+                S.lifeCur = S.lifeCur > lifeDecay ? S.lifeCur - uint16(lifeDecay) : 0;
+            }
+        } else if (uint32(S.hungerCur) * 2 >= uint32(S.hungerMax)) {
+            uint32 lifeRegen = (dt * 3) / 3600;
+            if (lifeRegen > 0) {
+                uint32 n = uint32(S.lifeCur) + lifeRegen;
+                S.lifeCur = n > S.lifeMax ? S.lifeMax : uint16(n);
+            }
+        }
+        // Energy regen
+        uint32 enRegen = dt / 120;
+        if (enRegen > 0) {
+            uint32 n = uint32(S.energyCur) + enRegen;
+            S.energyCur = n > S.energyMax ? S.energyMax : uint16(n);
+        }
+        S.lastUpdate = uint32(block.timestamp);
+    }
+
+    // Mint inicial (external via owner)
+    function mintFrog(address to, uint8 rarity) external onlyOwner whenNotPaused returns (uint256 id) {
+        id = _mintFrog(to);
+        uint16 base = _baseVitals(Rarity(rarity));
+        frogStats[id] = Stats({
+            atk: 3, def: 3, vel: 3,
+            lifeCur: base, lifeMax: base,
+            energyCur: base, energyMax: base,
+            hungerCur: base, hungerMax: base,
+            xp: 0, lastUpdate: uint32(block.timestamp),
+            lastBreed: 0,
+            rarity: rarity, pointsSpent: 0,
+            levelSnap: 1, generation: 1
+        });
+        emit FrogMinted(to, id, rarity);
+        if (registry != address(0)) {
+            bytes32 details = keccak256(abi.encode(to, rarity, block.timestamp));
+            (bool ok,) = registry.call(abi.encodeWithSelector(
+                ISuperReg.registerBirth.selector,
+                id, uint32(0), uint32(0), details
+            ));
+            require(ok, "reg");
+        }
+    }
+
+    // Allocate points
+    function allocatePoints(
+        uint256 id,
+        uint16 addAtk,
+        uint16 addDef,
+        uint16 addVel
+    ) external whenNotPaused {
+        if (ownerOf(id) != msg.sender) revert ErrAuth();
+        _syncVitals(id);
+        Stats storage S = frogStats[id];
+        uint8 lvl   = levelOf(id);
+        uint8 avail = _availPoints(lvl, S.pointsSpent);
+        uint16 sum   = addAtk + addDef + addVel;
+        if (sum == 0 || sum > avail) revert ErrPts();
+        (uint16 smax, uint16 pmax) = _caps(Rarity(S.rarity));
+        if (
+            S.atk + addAtk > pmax ||
+            S.def + addDef > pmax ||
+            S.vel + addVel > pmax ||
+            S.atk + addAtk + S.def + addDef + S.vel + addVel > smax
+        ) revert ErrMax();
+
+        S.atk += addAtk;
+        S.def += addDef;
+        S.vel += addVel;
+        S.pointsSpent += uint8(sum);
+
+        // Auto-augmenta max vitais a cada 5 níveis
+        uint8 prevTier = S.levelSnap / 5;
+        uint8 nowTier  = lvl / 5;
+        if (nowTier > prevTier) {
+            uint16 inc = 3 * (nowTier - prevTier);
+            S.lifeMax   += inc;
+            S.energyMax += inc;
+            S.hungerMax += inc;
+            if (S.lifeCur > S.lifeMax)     S.lifeCur     = S.lifeMax;
+            if (S.energyCur > S.energyMax) S.energyCur   = S.energyMax;
+            if (S.hungerCur > S.hungerMax) S.hungerCur   = S.hungerMax;
+        }
+        S.levelSnap = lvl;
+        emit PointsAllocated(id, S.atk, S.def, S.vel);
+    }
+
+    // Integrado ao GameHub
+    function consumeEnergy(uint256 id, uint16 cost) external whenNotPaused {
+        if (msg.sender != gameHub && msg.sender != owner) revert ErrRole();
+        _syncVitals(id);
+        Stats storage S = frogStats[id];
+        if (S.energyCur < cost) revert ErrEnergy();
+        S.energyCur -= cost;
+    }
+    function gainXP(uint256 id, uint32 amount) external whenNotPaused {
+        if (msg.sender != gameHub && msg.sender != owner) revert ErrRole();
+        Stats storage S = frogStats[id];
+        uint256 nxp = uint256(S.xp) + amount;
+        S.xp = uint32(nxp > type(uint32).max ? type(uint32).max : nxp);
+    }
+
+    // Breed
+    function breed(
+        uint256 a,
+        uint256 b,
+        bool support
+    ) external whenNotPaused returns (uint256 child) {
+        if (a == b) revert ErrAuth();
+        address oA = ownerOf(a);
+        address oB = ownerOf(b);
+        if (oA != msg.sender || oB != msg.sender) revert ErrOwn();
+
+        _syncVitals(a);
+        _syncVitals(b);
+        Stats storage A = frogStats[a];
+        Stats storage B = frogStats[b];
+
+        if (levelOf(a) < 5 || levelOf(b) < 5) revert ErrLvl();
+        if (block.timestamp < A.lastBreed + BREED_COOLDOWN) revert ErrCD();
+        if (block.timestamp < B.lastBreed + BREED_COOLDOWN) revert ErrCD();
+        if (A.generation >= MAX_GENERATION || B.generation >= MAX_GENERATION) revert ErrGen();
+
+        if (A.energyCur < BREED_ENERGY || B.energyCur < BREED_ENERGY) revert ErrEnergy();
+        A.energyCur -= BREED_ENERGY;
+        B.energyCur -= BREED_ENERGY;
+
+        // Taxa SAPO
+        uint256 baseFee = BREED_BASE_SAPO;
+        uint256 fee     = (baseFee * 300) / 10_000; // 3%
+        if (sapoToken != address(0)) {
+            require(
+                IERC20(sapoToken).transferFrom(msg.sender, owner, baseFee + fee),
+                "erc20"
+            );
+        }
+
+        // Raridade do filho
+        uint8 rChild = A.rarity < B.rarity ? A.rarity : B.rarity;
+        if (support && rChild < uint8(Rarity.Rare)) {
+            if (
+                uint256(
+                    keccak256(abi.encode(blockhash(block.number-1), a, b, msg.sender))
+                ) % 200 == 0
+            ) {
+                unchecked { rChild += 1; }
+            }
+        }
+
+        // Mint child
+        child = _mintFrog(msg.sender);
+        uint16 base = _baseVitals(Rarity(rChild));
+        frogStats[child] = Stats({
+            atk: 3, def: 3, vel: 3,
+            lifeCur: base, lifeMax: base,
+            energyCur: base, energyMax: base,
+            hungerCur: base, hungerMax: base,
+            xp: 0, lastUpdate: uint32(block.timestamp),
+            lastBreed: 0,
+            rarity: rChild, pointsSpent: 0,
+            levelSnap: levelOf(child), generation: A.generation > B.generation ? A.generation + 1 : B.generation + 1
+        });
+
+        A.lastBreed = uint64(block.timestamp);
+        B.lastBreed = uint64(block.timestamp);
+
+        emit Bred(msg.sender, a, b, child, fee, support);
+
+        if (registry != address(0)) {
+            bytes32 details = keccak256(abi.encode(msg.sender, rChild, block.timestamp));
+            (bool ok,) = registry.call(
+                abi.encodeWithSelector(
+                    ISuperReg.registerBirth.selector,
+                    child, uint32(a), uint32(b), details
+                )
+            );
+            require(ok, "regBirth");
+        }
+    }
+
+    // Burn se morto (vida == 0)
+    function burnIfDead(uint256 id) external whenNotPaused {
+        _syncVitals(id);
+        Stats storage S = frogStats[id];
+        if (S.lifeCur != 0) revert ErrAuth();
+
+        address o = ownerOf(id);
+        delete frogStats[id];
+        unchecked { _balanceOf[o] -= 1; }
+        delete _ownerOf[id];
+        delete _getApproved[id];
+        emit Transfer(o, address(0), id);
+        emit FrogBurned(id);
+
+        if (registry != address(0)) {
+            bytes32 det = keccak256(abi.encode(o, block.timestamp));
+            (bool ok,) = registry.call(
+                abi.encodeWithSelector(ISuperReg.registerDeath.selector, id, det)
+            );
+            require(ok, "regDeath");
+        }
+    }
+
+    // Metadata
+    string private _baseURI;
+    bool   public metadataFrozen;
+
+    function setBaseURI(string calldata uri) external onlyOwner {
+        if (metadataFrozen) revert ErrURI();
+        _baseURI = uri;
+    }
+    function freezeMetadata() external onlyOwner {
+        metadataFrozen = true;
+    }
+    function tokenURI(uint256 id) external view returns (string memory) {
+        if (_ownerOf[id] == address(0)) revert ErrNF();
+        return string(abi.encodePacked(_baseURI, _toString(id)));
+    }
+
+    function _toString(uint256 v) internal pure returns (string memory) {
+        if (v == 0) return "0";
+        uint256 temp = v;
+        uint256 digits;
+        while (temp != 0) { digits++; temp /= 10; }
+        bytes memory buffer = new bytes(digits);
+        while (v != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(v % 10)));
+            v /= 10;
+        }
+        return string(buffer);
+    }
+}

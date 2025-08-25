@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./SapoCore.sol";
+
+contract SapoTokenFinance is SapoCore {
+    // Estado do token
+    struct TokenState {
+        string name;
+        string symbol;
+        uint256 cap;
+        uint256 totalSupply;
+    }
+    TokenState public tokenState;
+    
+    // Estado do finance
+    struct FinanceState {
+        address registry;
+        address bankToken;
+    }
+    FinanceState public financeState;
+
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+    mapping(bytes32 => Check) public checks;
+
+    struct Check {
+        address from;
+        address to;
+        address token;
+        uint128 amount;
+        uint64 expiry;
+        uint8 flags;
+    }
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event CheckIssued(bytes32 indexed id, address indexed from, address indexed to, uint128 amount, uint64 expiry, uint8 flags);
+
+    constructor(
+        address _owner,
+        string memory _name,
+        string memory _symbol,
+        uint256 _cap
+    ) SapoCore(_owner) {
+        tokenState.name = _name;
+        tokenState.symbol = _symbol;
+        tokenState.cap = _cap;
+    }
+
+    function setFinanceLinks(address _registry, address _bankToken) external onlyOwner {
+        financeState.registry = _registry;
+        financeState.bankToken = _bankToken;
+    }
+
+    // Funções do token
+    function approve(address spender, uint256 value) external whenNotPaused returns (bool) {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    function transfer(address to, uint256 value) external whenNotPaused returns (bool) {
+        _transfer(msg.sender, to, value);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 value) external whenNotPaused returns (bool) {
+        uint256 a = allowance[from][msg.sender];
+        if (a < value) revert ErrNoOp();
+        unchecked { allowance[from][msg.sender] = a - value; }
+        _transfer(from, to, value);
+        return true;
+    }
+
+    function _transfer(address from, address to, uint256 value) internal {
+        if (to == address(0)) revert ErrZero();
+        uint256 b = balanceOf[from];
+        if (b < value) revert ErrNoOp();
+        
+        unchecked {
+            balanceOf[from] = b - value;
+            balanceOf[to] += value;
+        }
+        emit Transfer(from, to, value);
+    }
+
+    function mint(address to, uint256 value) external onlyOwner whenNotPaused {
+        if (to == address(0)) revert ErrZero();
+        uint256 newSupply = tokenState.totalSupply + value;
+        if (newSupply > tokenState.cap) revert ErrOverflow();
+        
+        tokenState.totalSupply = newSupply;
+        balanceOf[to] += value;
+        emit Transfer(address(0), to, value);
+    }
+
+    // Funções do finance
+    function issueCheck(bytes32 id, address to, address token, uint128 amount, uint64 expiry, uint8 flags) external whenNotPaused {
+        if (checks[id].from != address(0)) revert ErrExists();
+        checks[id] = Check(msg.sender, to, token, amount, expiry, flags);
+        emit CheckIssued(id, msg.sender, to, amount, expiry, flags);
+    }
+
+    function cashCheck(bytes32 id) external nonReentrant whenNotPaused {
+        Check memory c = checks[id];
+        if (c.to != msg.sender) revert ErrAuth();
+        if (c.expiry != 0 && block.timestamp > c.expiry) revert ErrNoOp();
+        delete checks[id];
+        _safeTransfer(c.token, c.to, c.amount);
+    }
+}

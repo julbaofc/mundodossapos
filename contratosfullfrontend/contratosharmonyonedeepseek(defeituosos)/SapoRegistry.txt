@@ -1,0 +1,344 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract SuperRegistry {
+    // Errors compactos
+    error Auth();
+    error Paused();
+    error Zero();
+    error Exists();
+    error NoOp();
+    error Role();
+    error Frozen();
+    error Bound();
+    error Active();
+
+    // Core agrupado em 1 slot
+    struct Core {
+        address owner;
+        address pendingOwner;
+        bool paused;
+    }
+    Core public core;
+
+    modifier onlyOwner() {
+        if (msg.sender != core.owner) revert Auth();
+        _;
+    }
+    modifier whenNotPaused() {
+        if (core.paused) revert Paused();
+        _;
+    }
+
+    event OwnershipTransferStarted(address indexed from, address indexed to);
+    event OwnershipTransferred(address indexed from, address indexed to);
+    event ContractPaused(address indexed by);
+    event ContractUnpaused(address indexed by);
+
+    constructor(address _owner) {
+        if (_owner == address(0)) revert Zero();
+        core.owner = _owner;
+    }
+
+    function transferOwnership(address to) external onlyOwner {
+        if (to == address(0)) revert Zero();
+        core.pendingOwner = to;
+        emit OwnershipTransferStarted(core.owner, to);
+    }
+
+    function acceptOwnership() external {
+        if (msg.sender != core.pendingOwner) revert Auth();
+        address old = core.owner;
+        core.owner = core.pendingOwner;
+        core.pendingOwner = address(0);
+        emit OwnershipTransferred(old, core.owner);
+    }
+
+    function pause() external onlyOwner {
+        core.paused = true;
+        emit ContractPaused(msg.sender);
+    }
+
+    function unpause() external onlyOwner {
+        core.paused = false;
+        emit ContractUnpaused(msg.sender);
+    }
+
+    // IDs Canônicos como uint8
+    uint8 public constant ID_SAPO_TOKEN = 1;
+    uint8 public constant ID_SAPO_FINANCE = 2;
+    uint8 public constant ID_SAPO_GAMEHUB = 3;
+    uint8 public constant ID_FROG_NFT = 4;
+    uint8 public constant ID_EQUIP_1155 = 5;
+    uint8 public constant ID_REGISTRY = 6;
+
+    // Entry struct otimizada
+    struct Entry {
+        bytes32 chash;
+        address addr;
+        uint40 updated;
+        uint24 ver;
+        bool frozen;
+    }
+    mapping(uint8 => Entry) public entries;
+
+    event ContractRegistered(uint8 indexed id, address addr, bytes32 chash, uint24 ver, uint40 when);
+    event ContractFrozen(uint8 indexed id);
+
+    function _extcodehash(address addr_) internal view returns (bytes32 ch) {
+        assembly {
+            ch := extcodehash(addr_)
+        }
+    }
+
+    // Timelock otimizado
+    struct TimelockOp {
+        uint40 eta;
+        bytes20 key;
+        bool exists;
+    }
+    mapping(bytes20 => TimelockOp) public timelockOps;
+
+    event OpQueued(bytes20 indexed key, bytes4 op, uint40 eta);
+    event OpExecuted(bytes20 indexed key, bytes4 op);
+    event OpCancelled(bytes20 indexed key);
+
+    function _queue(bytes20 key, uint40 delay) internal {
+        if (delay == 0) revert Zero();
+        uint40 when_ = uint40(block.timestamp) + delay;
+        if (timelockOps[key].exists) revert Exists();
+        
+        timelockOps[key] = TimelockOp(when_, key, true);
+        emit OpQueued(key, bytes4(key), when_);
+    }
+
+    function _exec(bytes20 key) internal {
+        TimelockOp memory op = timelockOps[key];
+        if (!op.exists || block.timestamp < op.eta) revert NoOp();
+        delete timelockOps[key];
+        emit OpExecuted(key, bytes4(key));
+    }
+
+    function cancelOp(bytes20 key) external onlyOwner {
+        if (!timelockOps[key].exists) revert NoOp();
+        delete timelockOps[key];
+        emit OpCancelled(key);
+    }
+
+    function queueSet(uint8 id, address newAddr, uint40 delay) external onlyOwner returns (bytes20 key) {
+        Entry storage e = entries[id];
+        if (e.frozen) revert Frozen();
+        if (newAddr == address(0)) revert Zero();
+        key = bytes20(keccak256(abi.encode("set", id, newAddr, address(this))));
+        _queue(key, delay);
+    }
+
+    function execSet(bytes20 key, uint8 id, address newAddr) external onlyOwner whenNotPaused {
+        _exec(key);
+        Entry storage e = entries[id];
+        if (e.frozen) revert Frozen();
+        bytes32 ch = _extcodehash(newAddr);
+        if (ch == bytes32(0)) revert NoOp();
+        e.chash = ch;
+        e.addr = newAddr;
+        e.updated = uint40(block.timestamp);
+        e.ver += 1;
+        e.frozen = false;
+        emit ContractRegistered(id, newAddr, ch, e.ver, e.updated);
+    }
+
+    function queueFreeze(uint8 id, uint40 delay) external onlyOwner returns (bytes20 key) {
+        if (entries[id].frozen) revert Frozen();
+        key = bytes20(keccak256(abi.encode("freeze", id, address(this))));
+        _queue(key, delay);
+    }
+
+    function execFreeze(bytes20 key, uint8 id) external onlyOwner whenNotPaused {
+        _exec(key);
+        Entry storage e = entries[id];
+        e.frozen = true;
+        emit ContractFrozen(id);
+    }
+
+    function get(uint8 id) external view returns (address) {
+        return entries[id].addr;
+    }
+
+    function verifyAndGet(uint8 id) external view returns (address a) {
+        Entry storage e = entries[id];
+        a = e.addr;
+        if (a == address(0)) revert NoOp();
+        if (_extcodehash(a) != e.chash) revert NoOp();
+    }
+
+    function entriesView(uint8 id) external view returns (address addr, bytes32 chash, uint40 updated, uint24 ver, bool frozen) {
+        Entry storage e = entries[id];
+        addr = e.addr;
+        chash = e.chash;
+        updated = e.updated;
+        ver = e.ver;
+        frozen = e.frozen;
+    }
+
+    // Roles como uint16
+    mapping(address => uint16) public roles;
+    uint16 public constant ROLE_VITALS = 1 << 0;
+    uint16 public constant ROLE_DOCS = 1 << 1;
+    uint16 public constant ROLE_VEHICLES = 1 << 2;
+    uint16 public constant ROLE_ENV = 1 << 3;
+    uint16 public constant ROLE_JUDICIAL = 1 << 4;
+    uint16 public constant ROLE_TERMS = 1 << 5;
+    uint16 public constant ROLE_PLAYER_ADMIN = 1 << 6;
+    uint16 public constant ROLE_BANK = 1 << 7;
+
+    event RoleUpdated(address indexed who, uint16 newMask);
+
+    function queueSetRole(address who, uint16 newMask, uint40 delay) external onlyOwner returns (bytes20 key) {
+        if (who == address(0)) revert Zero();
+        key = bytes20(keccak256(abi.encode("role", who, newMask, address(this))));
+        _queue(key, delay);
+    }
+
+    function execSetRole(bytes20 key, address who, uint16 newMask) external onlyOwner whenNotPaused {
+        _exec(key);
+        roles[who] = newMask;
+        emit RoleUpdated(who, newMask);
+    }
+
+    function _requireRole(address who, uint16 bit) internal view {
+        if ((roles[who] & bit) == 0) revert Role();
+    }
+
+    // Players com struct agrupada
+    struct PlayerData {
+        uint64 playerId;
+        address wallet;
+        bool exists;
+    }
+    
+    mapping(uint64 => PlayerData) public playerData;
+    mapping(address => PlayerData) public walletData;
+
+    event PlayerBound(uint64 indexed playerId, address indexed wallet);
+    event PlayerUnbound(uint64 indexed playerId, address indexed wallet);
+
+    function bindSelf(uint64 playerId) external whenNotPaused {
+        if (playerId == 0 || 
+            walletData[msg.sender].exists || 
+            playerData[playerId].exists
+        ) revert Exists();
+        
+        PlayerData memory data = PlayerData(playerId, msg.sender, true);
+        playerData[playerId] = data;
+        walletData[msg.sender] = data;
+        emit PlayerBound(playerId, msg.sender);
+    }
+
+    function adminBind(uint64 playerId, address wallet) external whenNotPaused {
+        _requireRole(msg.sender, ROLE_PLAYER_ADMIN);
+        if (playerId == 0 || wallet == address(0)) revert Zero();
+        if (playerData[playerId].exists || 
+            walletData[wallet].exists
+        ) revert Exists();
+        
+        PlayerData memory data = PlayerData(playerId, wallet, true);
+        playerData[playerId] = data;
+        walletData[wallet] = data;
+        emit PlayerBound(playerId, wallet);
+    }
+
+    function adminUnbind(uint64 playerId) external whenNotPaused {
+        _requireRole(msg.sender, ROLE_PLAYER_ADMIN);
+        PlayerData storage data = playerData[playerId];
+        if (!data.exists) revert NoOp();
+        
+        delete playerData[playerId];
+        delete walletData[data.wallet];
+        emit PlayerUnbound(playerId, data.wallet);
+    }
+
+    function isPlayerWallet(uint64 playerId, address w) external view returns (bool) {
+        return playerData[playerId].wallet == w;
+    }
+
+    // Terms & acceptance otimizados
+    uint32 public constant MAX_TERM_WINDOW = 1 days;
+
+    struct Term {
+        bytes16 hash;
+        uint24 version;
+        uint24 defaultWindow;
+        bool active;
+        bool recurrent;
+    }
+    mapping(uint8 => Term) public terms;
+
+    event TermSet(uint8 indexed termId, bytes16 hash, uint24 version, bool active, bool recurrent, uint24 defaultWindow);
+
+    function setTerm(uint8 termId, bytes32 docHash, bool active, bool recurrent, uint24 defaultWindowSec) external whenNotPaused {
+        if (msg.sender != core.owner) revert Auth();
+        Term storage t = terms[termId];
+        
+        bytes16 shortHash = bytes16(docHash);
+        
+        if (active) {
+            t.version += 1;
+            t.hash = shortHash;
+            t.active = true;
+            t.recurrent = recurrent;
+            t.defaultWindow = recurrent ? defaultWindowSec : 0;
+        } else {
+            t.active = false;
+        }
+        
+        emit TermSet(termId, shortHash, t.version, t.active, t.recurrent, t.defaultWindow);
+    }
+
+    struct Acceptance {
+        uint32 version;
+        uint40 time;
+        uint40 validUntil;
+    }
+    mapping(address => mapping(uint8 => Acceptance)) public accepted;
+
+    event TermAccepted(address indexed who, uint8 indexed termId, uint32 version, uint40 time, uint40 validUntil);
+
+    function acceptTerm(uint8 termId, uint32 windowSec) external whenNotPaused {
+        Term storage t = terms[termId];
+        if (!t.active || t.version == 0) revert Active();
+        
+        uint40 nowTs = uint40(block.timestamp);
+        uint40 valid = 0;
+        
+        if (t.recurrent) {
+            uint40 win = windowSec == 0 ? uint40(t.defaultWindow) : uint40(windowSec);
+            if (win == 0 || win > MAX_TERM_WINDOW) win = uint40(MAX_TERM_WINDOW);
+            valid = nowTs + win;
+        }
+        
+        accepted[msg.sender][termId] = Acceptance(uint32(t.version), nowTs, valid);
+        emit TermAccepted(msg.sender, termId, uint32(t.version), nowTs, valid);
+    }
+
+    function termsView(uint8 termId) external view returns (bytes16 hash, uint24 version, bool active, bool recurrent, uint24 defaultWindow) {
+        Term storage t = terms[termId];
+        hash = t.hash;
+        version = t.version;
+        active = t.active;
+        recurrent = t.recurrent;
+        defaultWindow = t.defaultWindow;
+    }
+
+    function acceptedView(address who, uint8 termId) external view returns (uint32 version, uint40 time, uint40 validUntil) {
+        Acceptance storage a = accepted[who][termId];
+        version = a.version;
+        time = a.time;
+        validUntil = a.validUntil;
+    }
+
+    function verifyTermHash(uint8 termId, bytes32 fullHash) external view returns (bool) {
+        Term storage t = terms[termId];
+        bytes16 shortHash = bytes16(fullHash);
+        return t.hash == shortHash;
+    }
+}
