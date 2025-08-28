@@ -1,0 +1,35 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./SapoCore.sol";
+
+contract FrogNFT is SapoCore {
+    address public sapoToken;
+    address public gameHub;
+    address public registry;
+
+    // Packed frog stats (reordered for packing)
+    struct Stats {
+        uint64 vigor;     // was scattered; grouping larger -> smaller helps packing
+        uint32 strength;
+        uint32 agility;
+        uint16 luck;
+        uint16 iq;
+        uint8  rank;
+        uint8  rarity;
+        // fits into 1.5 slots -> actually 2 slots
+    }
+
+    mapping(uint256 => Stats) public frogStats;
+
+    constructor(address _owner) SapoCore(_owner) {}
+    function setLinks(address _sapoToken, address _gameHub, address _registry) external onlyOwner {
+        sapoToken = _sapoToken;
+        gameHub   = _gameHub;
+        registry  = _registry;
+    }
+
+    function setStats(uint256 tokenId, Stats calldata s) external onlyOwner whenNotPaused {
+        frogStats[tokenId] = s;
+    }
+}

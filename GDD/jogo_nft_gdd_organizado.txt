@@ -1,0 +1,1806 @@
+﻿Documento Mestre — Mundo dos Sapos (Organizado)
+ÍNDICE
+O sumário será gerado automaticamente no Word (selecione e pressione F9).
+🐸 Documento Mestre — Mundo dos Sapos
+1. 📜 Visão Geral
+O Mundo dos Sapos é um jogo que mistura sobrevivência, exploração, PvE, PvP opcional, crafting, economia entre jogadores e um hub social interativo (Plaza). Cada sapo é único, com genética própria, raridade e atributos que influenciam seu desempenho em combate, reprodução e interações.
+O ciclo central do jogo é:
+Caçar → Obter Recursos → Criar/Negociar → Evoluir → Sobreviver
+2. 🏛 Plaza (Hub Social)
+O Plaza é a área social em tempo real onde os jogadores:
+    • Movem seu sapo ativo livremente em 8 direções (setas ou WASD).
+    • Conversam em canais: Geral, Local, Comércio e Ajuda.
+    • Enviam PM clicando em outros jogadores.
+    • Realizam trade seguro P2P de itens não‑NFT.
+    • Marcam sapos/jogadores como aliado ou agressivo (influencia PvP nas Hunts).
+    • Participam de eventos sociais, minigames e encontros da comunidade.
+    • Instâncias com 30–60 jogadores.
+3. 🏅 Raridades
+Raridade	Descrição	Observações
+🆓 Grátis	1 por conta; não‑NFT; não pode breedar; XP/loot = 1/3; pode virar Comum NFT.	Sapo inicial de aprendizado.
+🟢 Comum	Equilibrado.	Boa progressão geral.
+🔵 Incomum	Mais potencial e melhores chances de habilidades.	Excelente para PvP médio e Hunts mais difíceis.
+🟣 Raro	Status e habilidades máximos.	Mais valioso e cobiçado.
+4. 📈 Progressão
+    • Nível Máximo: 30
+    • +1 ponto em ATK/DEF/VEL a cada 3 níveis
+    • Bônus (Vida/Energia/Fome) a cada 5 níveis
+    • XP ganho: Hunts, PvP, crafting avançado, eventos
+Nível	XP acumulado
+1	0
+2	15
+3	45
+4	90
+5	150
+…	Incremento progressivo
+5. 💪 Status
+Sobrevivência
+Raridade	Vida ❤️	Energia ⚡	Fome 🍎
+Grátis	75	75	75
+Comum	90	90	90
+Incomum	120	120	120
+Raro	150	150	150
+Regras de sobrevivência:
+    • Energia: regenera com o tempo.
+    • Fome: cai com o tempo; se zerar, Vida cai com o tempo.
+    • Se Fome ≥ 50% e sapo inativo → Vida regenera lentamente.
+Batalha
+Raridade	Soma Máx. (ATK+DEF+VEL)	Mín./atrib.	Máx./atrib.
+Grátis	15	3	9
+Comum	18	3	12
+Incomum	21	3	15
+Raro	24	3	18
+6. 🌀 Habilidades (Skills)
+    • Possibilidades: 0, 1 ou 2 skills.
+    • Sorteio:
+    • 1ª skill: chance por raridade.
+    • 2ª skill: chance condicional.
+    •     1ª skill: chance por raridade.
+    •     2ª skill: chance condicional.
+    • 1ª skill: chance por raridade.
+    • 2ª skill: chance condicional.
+Raridade	1ª Skill	2ª Skill (cond.)	0 Skills	1 Skill	2 Skills
+Grátis	20%	30%	80%	14%	6%
+Comum	45%	30%	55%	31,5%	13,5%
+Incomum	60%	45%	40%	33%	27%
+Raro	75%	60%	25%	30%	45%
+Tipos: Ataque, Defesa, Cura, Buff.
+7. 🧬 Genética
+    • Cores: corpo, contorno, barriga, pernas, olhos, bochechas, cabeça, ombros, boca, nariz.
+    • Padrões: pintas, manchas, listras, formas especiais.
+    • Trava genética: item pode preservar 1 gene no breeding.
+8. 🏹 Sistema de Caça (Hunts)
+As Hunts são o principal modo de combate PvE, onde o jogador enfrenta uma sequência de fases para ganhar XP, loot e, eventualmente, eventos raros. O design é inspirado em missões segmentadas — cada fase tem inimigos e recompensas definidos, mas também uma margem de variação para manter a caça imprevisível.
+8.1 Estrutura e Regras Gerais
+    • Nível permitido: cada Hunt define um mínimo e máximo de nível para entrada.
+    • Fases: 3 a 5 fases, com dificuldade e recompensas crescentes.
+    • Energia: custo fixo para iniciar + custo por fase (múltiplos de 5).
+    • Fome/Energia: manter Fome ≥ 50% ajuda a regenerar Vida entre caçadas se o sapo descansar.
+    • Recuperação: pós-batalha, Vida permanece no valor final (exceto PvP, que nunca mata direto e deixa 1 de Vida mínima).
+8.2 Tipos de Inimigos
+    • Presas: fracos, focados em drop de comida e materiais comuns.
+    • Predadores: intermediários, com drop melhor e chance de consumíveis.
+    • Chefes: poderosos, garantem loot e têm chances de blueprint raros.
+    • Sapos Selvagens: podem ser agressivos (PvE) ou aliados temporários.
+    • PvP Opt‑in: combate contra outro jogador que ativou PvP na entrada da Hunt.
+8.3 Eventos Aleatórios
+Ao iniciar cada fase, há chance de gatilho para eventos pré-configurados:
+    • 🌟 Tesouro Perdido: baú com loot bônus e 10–20% de chance de raro.
+    • 🐸 Sapo Mercador: NPC com oferta de item exclusivo.
+    • 🌱 Erva Rara: item coletável que concede buff imediato.
+    • 💥 Emboscada: ataque surpresa; loot extra se vencer.
+    • 🔮 Ritual Arcano: mini-chefe místico com alta chance de blueprint.
+8.4 Sistema de Probabilidade de Encontro
+    • Comuns (presas/predadores): 70–80%
+    • Raros (chefes de menor porte, sapos especiais, PvP): 15–20%
+    • Eventos especiais: 5–10%
+8.5 Modelo de Tabela de Hunt
+Hunt	Nível	Fase	Monstros	Qtd.	XP cada	Total XP fase	Loot Base	Chance	Drop Secundário	Chance
+H1 Colônia das Formigas	1‑3	1	Formiga	2	1	2	Comida Crua Comum	80%	Materiais Comuns	20%
+		2	Formiga	2	1	2	Comida Crua Comum	80%	Materiais Comuns	20%
+			Formiga do Bundão	1	2	+2	Materiais Comuns	60%	Consumível Comum	40%
+		3	Rainha Formiga (Chefe)	1	5	5	Blueprint Comum	20%	Materiais Comuns Raros	80%
+Cada Hunt do jogo seguirá este padrão, aumentando progressivamente o XP, a dificuldade e a qualidade dos drops.
+
+8.6 📜 Lista Completa de Hunts (H1 a H20)
+(Exemplo base para construir toda a progressão PvE do jogo)
+H1 – Colônia das Formigas (nível 1–3)
+    • Fase 1: 2× Formiga (1 XP cada) → 80% Comida Crua Comum / 20% Materiais Comuns
+    • Fase 2: 2× Formiga (1 XP cada) + 1× Formiga do Bundão (2 XP) → Bundão: 60% Materiais Comuns / 40% Consumível Comum
+    • Fase 3 (Chefe): Rainha Formiga (5 XP) → 20% Blueprint Comum / 80% Materiais Comuns Raros
+H2 – Lago dos Girinos (nível 2–5)
+    • Fase 1: 3× Girino (1 XP cada) → 75% Comida Crua Aquática / 25% Materiais Comuns
+    • Fase 2: 2× Girino (1 XP cada) + 1× Girino Grande (3 XP) → Grande: 50% Consumível Energia Comum / 50% Materiais Comuns
+    • Fase 3: Sapo Selvagem Jovem (4 XP) → 30% Equipamento Pescoço Comum / 70% Materiais Raros
+H3 – Pântano Nebuloso (nível 4–7)
+    • Fase 1: 3× Mosquito do Pântano (1 XP cada) → 80% Comida Crua Comum / 20% Materiais Comuns
+    • Fase 2: 2× Cobra d’Água (3 XP cada) → 50% Materiais Raros / 50% Consumível Cura Comum
+    • Fase 3 (Chefe): Cobra Anciã (7 XP) → 15% Blueprint Raro / 85% Materiais Raros
+H4 – Floresta Sombria (nível 5–8)
+    • Fase 1: 2× Besouro da Sombra (2 XP cada) → 60% Materiais Comuns / 40% Consumível Energia Comum
+    • Fase 2: 3× Morcego Noturno (2 XP cada) → 50% Comida Crua Rara / 50% Consumível Energia Raro
+    • Fase 3 (Chefe): Lobo Negro (10 XP) → 20% Blueprint Raro / 80% Equipamento Costas Comum
+H5 – Montanha das Rochosas (nível 7–10)
+    • Fase 1: 2× Lagarto Rochoso (2 XP cada) → 70% Materiais Comuns / 30% Pedra de Craft Rara
+    • Fase 2: 1× Lagarto Rochoso (2 XP) + 2× Águia Pequena (3 XP cada) → Águia: 40% Consumível Buff ATK / 60% Materiais Raros
+    • Fase 3 (Chefe): Golem de Pedra (12 XP) → 25% Blueprint Raro / 75% Materiais Raros
+H6 – Cavernas de Cristal (nível 9–12)
+    • Fase 1: 3× Morcego Cristalino (2 XP cada) → 60% Materiais Comuns / 40% Fragmento de Cristal
+    • Fase 2: 2× Caranguejo de Rocha (3 XP cada) → 50% Materiais Raros / 50% Consumível Cura Raro
+    • Fase 3 (Chefe): Guardião Cristalino (15 XP) → 20% Blueprint Épico / 80% Materiais de Cristal
+H7 – Deserto Escaldante (nível 11–14)
+    • Fase 1: 3× Escorpião Pequeno (2 XP cada) → 60% Comida Crua Seca / 40% Materiais Comuns
+    • Fase 2: 2× Cobra da Areia (3 XP cada) → 50% Materiais Raros / 50% Consumível Energia Comum
+    • Fase 3 (Chefe): Escorpião Gigante (15 XP) → 25% Blueprint Raro / 75% Materiais Raros
+H8 – Vulcão em Atividade (nível 13–16)
+    • Fase 1: 2× Lagarto de Magma (3 XP cada) → 50% Materiais de Lava / 50% Consumível Buff DEF
+    • Fase 2: 3× Morcego de Fogo (3 XP cada) → 60% Consumível Energia Raro / 40% Materiais Comuns
+    • Fase 3 (Chefe): Elemental de Fogo (18 XP) → 30% Blueprint Épico / 70% Pedra Rara
+H9 – Penhascos Ventosos (nível 15–18)
+    • Fase 1: 2× Águia Média (3 XP cada) → 40% Equipamento Costas Comum / 60% Materiais Raros
+    • Fase 2: 2× Águia Média (3 XP) + 1× Condor (5 XP) → Condor: 20% Blueprint Raro / 80% Consumível Buff VEL
+    • Fase 3 (Chefe): Dragão Alado Jovem (20 XP) → 10% Blueprint Épico / 90% Materiais Lendários
+8.6 (continuação) — Lista de Hunts H10 a H20
+H10 – Ruínas Afundadas (nível 17–20)
+    • Fase 1: 3× Piranha das Profundezas (3 XP cada) → 70% Comida Crua Aquática / 30% Materiais Comuns
+    • Fase 2: 2× Enguia Elétrica (4 XP cada) → 50% Consumível Energia Raro / 50% Materiais Raros
+    • Fase 3 (Chefe): Leviatã Jovem (20 XP) → 15% Blueprint Épico / 85% Materiais Lendários
+H11 – Campo Congelado (nível 19–22)
+    • Fase 1: 2× Lebre Ártica (3 XP cada) → 70% Comida Crua Rara / 30% Materiais Comuns
+    • Fase 2: 3× Corvo Polar (3 XP cada) → 40% Materiais Raros / 60% Consumível Cura Comum
+    • Fase 3 (Chefe): Urso Branco Gigante (22 XP) → 20% Blueprint Raro / 80% Equipamento Costas Comum
+H12 – Gruta das Sombras (nível 21–24)
+    • Fase 1: 3× Aranha Sombria (3 XP cada) → 60% Materiais Comuns / 40% Comida Crua Rara
+    • Fase 2: 2× Morcego Sombrio (4 XP cada) → 50% Consumível Buff ATK / 50% Materiais Raros
+    • Fase 3 (Chefe): Aracnídeo Colossal (24 XP) → 25% Blueprint Épico / 75% Materiais Raros
+H13 – Selva Antiga (nível 23–26)
+    • Fase 1: 3× Macaco de Cauda Longa (3 XP cada) → 70% Comida Crua Comum / 30% Materiais Comuns
+    • Fase 2: 2× Cobra Verde (4 XP cada) → 50% Consumível Cura Raro / 50% Materiais Raros
+    • Fase 3 (Chefe): Tigre de Presas Longas (26 XP) → 20% Blueprint Raro / 80% Equipamento Pescoço Raro
+H14 – Penhascos Congelados (nível 25–28)
+    • Fase 1: 2× Águia Glacial (4 XP cada) → 60% Equipamento Costas Comum / 40% Materiais Raros
+    • Fase 2: 1× Águia Glacial (4 XP) + 2× Lobo Polar (5 XP cada) → 50% Consumível Buff VEL / 50% Materiais Lendários
+    • Fase 3 (Chefe): Fênix do Gelo (28 XP) → 15% Blueprint Épico / 85% Materiais Raros
+H15 – Fortaleza Abandonada (nível 27–30)
+    • Fase 1: 3× Soldado Fantasma (4 XP cada) → 70% Materiais Comuns / 30% Consumível Energia Comum
+    • Fase 2: 2× Cavaleiro Espectral (5 XP cada) → 40% Equipamento Pescoço Raro / 60% Materiais Raros
+    • Fase 3 (Chefe): General Fantasmagórico (30 XP) → 25% Blueprint Épico / 75% Materiais Lendários
+H16 – Deserto de Areia Negra (nível 29–32)
+    • Fase 1: 3× Escorpião de Areia Negra (4 XP cada) → 60% Comida Crua Seca / 40% Materiais Comuns
+    • Fase 2: 2× Serpente de Areia Negra (5 XP cada) → 50% Consumível Energia Raro / 50% Materiais Raros
+    • Fase 3 (Chefe): Guardião de Obsidiana (32 XP) → 20% Blueprint Épico / 80% Pedra Rara
+H17 – Cratera Lunar (nível 31–34)
+    • Fase 1: 3× Morcego Lunar (4 XP cada) → 70% Materiais Raros / 30% Consumível Cura Comum
+    • Fase 2: 2× Golem Lunar (5 XP cada) → 50% Pedra Rara / 50% Consumível Buff DEF
+    • Fase 3 (Chefe): Colosso Lunar (34 XP) → 20% Blueprint Épico / 80% Materiais Lendários
+H18 – Vale do Crepúsculo (nível 33–36)
+    • Fase 1: 2× Lobo Sombrio (5 XP cada) → 60% Materiais Comuns / 40% Comida Crua Rara
+    • Fase 2: 3× Coruja Noturna (4 XP cada) → 50% Consumível Buff VEL / 50% Materiais Raros
+    • Fase 3 (Chefe): Guardião do Crepúsculo (36 XP) → 25% Blueprint Épico / 75% Equipamento Costas Raro
+H19 – Catedral Submersa (nível 35–38)
+    • Fase 1: 3× Peixe Abissal (4 XP cada) → 60% Comida Crua Aquática / 40% Materiais Comuns
+    • Fase 2: 2× Cavalo-Marinho Gigante (5 XP cada) → 50% Consumível Energia Comum / 50% Materiais Raros
+    • Fase 3 (Chefe): Serpente Marinha Anciã (38 XP) → 20% Blueprint Épico / 80% Materiais Lendários
+H20 – Trono dos Ancestrais (nível 39–40)
+    • Fase 1: 2× Guardião Ancestral (6 XP cada) → 60% Materiais Raros / 40% Consumível Cura Raro
+    • Fase 2: 2× Guerreiro Ancestral (6 XP cada) → 50% Equipamento Pescoço Épico / 50% Materiais Lendários
+    • Fase 3 (Chefe Final): Rei Ancestral (40 XP) → 30% Blueprint Lendário / 70% Equipamento Lendário
+9. 🎁 Sistema de Loot e Drop Table Completa
+Esta seção organiza todas as origens de loot, separando por tipo de inimigo/evento e listando:
+    • Itens possíveis
+    • Chances de drop
+    • Qualidade do item (comum, raro, épico, lendário)
+    • Uso principal no jogo
+9.1 Tabela de Drop por Categoria de Origem
+Origem	Drop Principal	Chance	Drop Secundário	Chance	Observações
+Presas	Comida Crua Comum	80%	Materiais Comuns	20%	Monstros fracos; loot básico
+Predadores	Materiais Raros	60%	Consumível Comum (cura/energia)	40%	Desafios médios; loot útil para crafting
+Chefes	Blueprint Raro ou Épico	40%	Consumível Raro (cura/energia)	60%	Garantem loot; chave para progressão
+Sapos Selvagens	Equipamento Comum (Pescoço/Costas)	50%	Materiais Comuns	50%	Cosméticos e buffs leves
+Eventos	Item Especial do Evento	100%	Loot Comum associado	0–50%	Ex.: planta rara, baú, mercador
+9.2 Qualidade e Raridade dos Itens
+    • Comum: alta taxa de drop, fácil reposição; baixo impacto em atributos.
+    • Raro: taxa de drop média; impacto moderado nos atributos ou efeitos únicos de curta duração.
+    • Épico: baixa taxa de drop; atributos relevantes ou efeitos potentes.
+    • Lendário: taxa de drop muito baixa (<2%); itens exclusivos, visuais únicos e buffs permanentes.
+9.3 Lista de Drops por Origem e Uso
+Presas
+    • 🍖 Comida Crua Comum: +10 Fome (pode cozinhar para +20 e +buff temporário)
+    • 🪵 Materiais Comuns: madeira, fibras, ossos — usados em crafting básico
+Predadores
+    • ⚙️ Materiais Raros: metais, peles resistentes — crafting avançado
+    • 🧃 Consumível Comum:
+    • Poção de Cura Comum: +30% Vida
+    • Energético Natural: +20% Energia
+    •     Poção de Cura Comum: +30% Vida
+    •     Energético Natural: +20% Energia
+    • Poção de Cura Comum: +30% Vida
+    • Energético Natural: +20% Energia
+Chefes
+    • 📜 Blueprints Raros/Épicos: desbloqueiam receitas de craft (equipamentos, consumíveis, decorações raras)
+    • 💊 Consumível Raro:
+    • Poção de Cura Rara: Vida total + buff DEF 5 min
+    • Tônico de Energia Raro: +50% Energia + buff VEL 3 min
+    •     Poção de Cura Rara: Vida total + buff DEF 5 min
+    •     Tônico de Energia Raro: +50% Energia + buff VEL 3 min
+    • Poção de Cura Rara: Vida total + buff DEF 5 min
+    • Tônico de Energia Raro: +50% Energia + buff VEL 3 min
+
+Sapos Selvagens
+    • 👔 Equipamentos Comuns: laços, gravatas (+buff leve)
+    • 🎒 Equipamentos de Costas: mochilas simples (+5% loot comum)
+Eventos
+    • 🌟 Tesouro Perdido: item cosmético raro (ex.: capa especial)
+    • 🌱 Erva Rara: buff imediato (+15% ATK por 5 min)
+    • 💥 Emboscada: loot comum dobrado na fase
+    • 🔮 Ritual Arcano: alta chance (30–50%) de blueprint épico
+9.4 Interação com Economia
+    • NFTs obtidos via loot: skins/cosméticos limitados, equipamentos raros, blueprints lendários.
+    • Não‑NFTs obtidos via loot: consumíveis, comidas, materiais, equipamentos comuns.
+10. ⚒ Crafting e Equipamentos
+10.1 Sistema de Craft
+O Crafting é uma das colunas centrais do jogo, responsável por transformar recursos coletados nas Hunts em consumíveis, equipamentos e decorações.
+Categorias de Craft:
+    • Consumíveis: poções de cura, tônicos de energia, comidas preparadas, buffs temporários.
+    • Equipamentos: itens equipáveis no pescoço e nas costas, com função cosmética ou buffs leves.
+    • Decorações: objetos estéticos para espaços sociais e coleções pessoais (NFT e não‑NFT).
+    • Itens de Suporte ao Breeding: artefatos que alteram chances de habilidades, raridade ou preservam genes.
+Origem das receitas:
+    • Comuns: aprendidas por padrão ou liberadas em tutoriais.
+    • Raras: compradas em eventos, no mercado, ou obtidas via drop.
+    • Épicas/Lendárias: exigem blueprint obtido em chefes ou eventos únicos.
+10.2 Tabela de Receitas de Craft (Exemplos)
+Item	Categoria	Ingredientes	Tempo	Efeito	Raridade	Origem da Receita
+Poção de Cura Comum	Consumível	2x Erva Comum, 1x Água Pura	10s	+30% Vida	Comum	Padrão
+Poção de Cura Rara	Consumível	2x Erva Rara, 1x Água Pura, 1x Essência Vital	30s	Vida total + buff DEF 5 min	Raro	Drop Chefe
+Energético Natural	Consumível	3x Fruto Energético	8s	+20% Energia	Comum	Padrão
+Tônico de Energia Raro	Consumível	2x Fruto Energético Raro, 1x Água Energizada	25s	+50% Energia + buff VEL 3 min	Raro	Evento
+Capa Heroica Azul	Equipamento (Costas)	4x Tecido Comum, 2x Linha Fina	1m	+1 ATK, +1 VEL	Comum	Padrão
+Mochila Explorer	Equipamento (Costas)	3x Couro Comum, 2x Madeira Leve	40s	+5% loot comum	Raro	Missão
+Gravata Dourada	Equipamento (Pescoço)	2x Tecido Luxo, 1x Fio Dourado	50s	+2 DEF	Raro	Mercado
+Pedra da Memória	Breeding	1x Cristal Memória, 2x Essência Genética	2m	Mantém 1 skill de um dos pais	Raro	Chefe Épico
+10.3 Sistema de Equipamentos
+    • Slots: Pescoço e Costas.
+    • Tipos:
+    • Cosmético: apenas aparência, sem efeito no combate.
+    • Funcional: bônus pequenos em ATK, DEF, VEL, loot ou XP.
+    •     Cosmético: apenas aparência, sem efeito no combate.
+    •     Funcional: bônus pequenos em ATK, DEF, VEL, loot ou XP.
+    • Cosmético: apenas aparência, sem efeito no combate.
+    • Funcional: bônus pequenos em ATK, DEF, VEL, loot ou XP.
+    • Regras:
+    • 1 item por slot ativo.
+    • Troca livre fora de combate.
+    • Itens podem ser NFTs (séries limitadas) ou não‑NFTs (produção infinita).
+    •     1 item por slot ativo.
+    •     Troca livre fora de combate.
+    •     Itens podem ser NFTs (séries limitadas) ou não‑NFTs (produção infinita).
+    • 1 item por slot ativo.
+    • Troca livre fora de combate.
+    • Itens podem ser NFTs (séries limitadas) ou não‑NFTs (produção infinita).
+11. 🧩 Itens de Suporte ao Breeding
+O sistema de breeding no Mundo dos Sapos é uma das mecânicas mais estratégicas e lucrativas do jogo. Os itens de suporte ao breeding permitem que os jogadores influenciem o resultado da reprodução, aumentando suas chances de obter sapos com as habilidades, raridades e características genéticas desejadas.
+11.1 Regras de Uso
+    • Cada progenitor pode segurar 1 item de suporte antes do breeding.
+    • O item deve estar equipado no slot de breeding (independente de pescoço/costas para equipamentos visuais).
+    • Itens de suporte não são consumíveis cosméticos — são recursos estratégicos de uso único.
+    • Desaparecem após o breeding ser realizado.
+    • Podem ser NFTs (edições limitadas) ou não‑NFTs (craftáveis e farmáveis).
+11.2 Lista de Itens e Efeitos
+Item	Tipo	Efeito	Raridade	Origem
+Pedra da Memória 🪨	Preservação de Skill	50% de chance de herdar 1 habilidade específica de um dos pais.	Raro	Drop de chefe raro / mercado
+Essência Evolutiva ✨	Geração de 2ª Skill	+10% de chance do filhote gerar 2ª habilidade, se já recebeu a 1ª.	Raro	Craft avançado / evento
+Colar da Fertilidade 📿	Aumento de Raridade	+0,5% de chance de subir raridade final do filhote.	Épico	Evento especial / NFT
+Lacre Genético 🔒	Preservação Genética	Garante que 1 gene (cor ou padrão) será herdado de um dos pais.	Raro	Craft com materiais lendários
+Elixir Mutagênico 🧪	Mutação Garantida	Garante que o filhote nasça com 1 mutação visual ou de skill.	Lendário	Blueprint exclusivo de evento
+11.3 Sinergia com Raridade e Skills
+    • Itens como Pedra da Memória e Essência Evolutiva são particularmente valiosos para sapos raros ou com skills únicas.
+    • Lacre Genético aumenta valor de mercado de sapos raros com visuais ou padrões cobiçados.
+    • Elixir Mutagênico cria demanda alta no mercado por ser o único que garante mutação.
+11.4 Impacto Econômico
+    • Itens de suporte ao breeding são fortes candidatos a serem NFTs, especialmente em edições sazonais ou limitadas.
+    • Itens comuns podem circular livremente como não‑NFTs, criando economia interna acessível a todos os jogadores.
+12. ❤️ Pós‑Batalha e Recuperação de Vida/Energia
+O sistema de pós‑batalha no Mundo dos Sapos foi pensado para equilibrar desafio, estratégia de recursos e justiça em PvP.
+12.1 Persistência de Vida pós‑Combate
+    • Regra geral: o valor de Vida ao final de uma luta é mantido exatamente no estado em que terminou.
+    • Ex.: se o sapo venceu com 71/75 de Vida, ficará com 71/75 até ser curado ou regenerar pelo descanso.
+    •     Ex.: se o sapo venceu com 71/75 de Vida, ficará com 71/75 até ser curado ou regenerar pelo descanso.
+    • Ex.: se o sapo venceu com 71/75 de Vida, ficará com 71/75 até ser curado ou regenerar pelo descanso.
+    • PvP (derrota):
+    • Vida mínima cai para 1 ponto (ex.: 1/75).
+    • Não há morte direta — permite recuperação estratégica.
+    •     Vida mínima cai para 1 ponto (ex.: 1/75).
+    •     Não há morte direta — permite recuperação estratégica.
+    • Vida mínima cai para 1 ponto (ex.: 1/75).
+    • Não há morte direta — permite recuperação estratégica.
+    • PvE (derrota):
+    • Vida pode cair a 0.
+    • Em 0 de Vida o sapo fica incapacitado e só pode ser queimado (burn) para conversão em valor/itens equivalentes.
+    •     Vida pode cair a 0.
+    •     Em 0 de Vida o sapo fica incapacitado e só pode ser queimado (burn) para conversão em valor/itens equivalentes.
+    • Vida pode cair a 0.
+    • Em 0 de Vida o sapo fica incapacitado e só pode ser queimado (burn) para conversão em valor/itens equivalentes.
+12.2 Burn Automático
+    • Qualquer sapo com Vida = 0 por fome ou derrota em PvE entra no estado de morte permanente.
+    • O burn gera:
+    • Item simbólico (ex.: Essência de Sapo) com valor equivalente.
+    • Possível uso dessa essência em crafts raros ou no mercado.
+    •     Item simbólico (ex.: Essência de Sapo) com valor equivalente.
+    •     Possível uso dessa essência em crafts raros ou no mercado.
+    • Item simbólico (ex.: Essência de Sapo) com valor equivalente.
+    • Possível uso dessa essência em crafts raros ou no mercado.
+12.3 Recuperação de Vida
+Formas de recuperar Vida:
+    • Descanso + Alimentação:
+    • Sapo inativo (fora de Hunts, PvP e breeding).
+    • Fome ≥ 50% → ativa regeneração lenta.
+    • Regeneração sugerida: +3 Vida/hora (podendo variar por raridade).
+    •     Sapo inativo (fora de Hunts, PvP e breeding).
+    •     Fome ≥ 50% → ativa regeneração lenta.
+    •     Regeneração sugerida: +3 Vida/hora (podendo variar por raridade).
+    • Sapo inativo (fora de Hunts, PvP e breeding).
+    • Fome ≥ 50% → ativa regeneração lenta.
+    • Regeneração sugerida: +3 Vida/hora (podendo variar por raridade).
+    • Consumíveis de Cura:
+    • Poção de Cura Comum: +30% Vida.
+    • Poção de Cura Rara: Vida total + buff DEF por 5 minutos.
+    • Kit Médico Completo: Vida total + 50% de Energia.
+    •     Poção de Cura Comum: +30% Vida.
+    •     Poção de Cura Rara: Vida total + buff DEF por 5 minutos.
+    •     Kit Médico Completo: Vida total + 50% de Energia.
+    • Poção de Cura Comum: +30% Vida.
+    • Poção de Cura Rara: Vida total + buff DEF por 5 minutos.
+    • Kit Médico Completo: Vida total + 50% de Energia.
+12.4 Recuperação de Energia
+    • Regeneração natural: aumenta com o tempo, mais rápida em sapos bem alimentados.
+    • Consumíveis de Energia:
+    • Energético Natural: +20% de Energia.
+    • Tônico de Energia Raro: +50% de Energia + buff VEL por 3 minutos.
+    •     Energético Natural: +20% de Energia.
+    •     Tônico de Energia Raro: +50% de Energia + buff VEL por 3 minutos.
+    • Energético Natural: +20% de Energia.
+    • Tônico de Energia Raro: +50% de Energia + buff VEL por 3 minutos.
+12.5 Interações com Fome
+    • Fome é o gatilho de todas as condições de sobrevivência.
+    • Em 0% de Fome → Vida começa a cair (1 ponto por período).
+    • Fome cheia e acima de 50% → ativa regeneração de Vida quando em descanso.
+13. 💰 Economia, Mercado, Loja e Classificação NFT vs Não‑NFT
+13.1 Estrutura Econômica
+O Mundo dos Sapos opera em duas economias interligadas:
+    • Economia Interna (in‑game) — circulação de recursos não‑NFT, alta liquidez, uso cotidiano.
+    • Economia On‑Chain (blockchain) — ativos NFT exclusivos, escassos e negociáveis dentro e fora do jogo.
+13.2 Mercado entre Jogadores
+    • Tipo: leilão ou venda direta.
+    • Acesso: via menu ou NPC no Plaza.
+    • Listagem: taxa fixa (em moeda interna) por anúncio.
+    • Filtros de busca: categoria, raridade, tipo de item.
+    • Funcionalidades:
+    • Compra/venda de NFTs (blockchain) e não‑NFTs (apenas internos).
+    • Histórico de preços para referência.
+    • Sistema de reputação de vendedores.
+    •     Compra/venda de NFTs (blockchain) e não‑NFTs (apenas internos).
+    •     Histórico de preços para referência.
+    •     Sistema de reputação de vendedores.
+    • Compra/venda de NFTs (blockchain) e não‑NFTs (apenas internos).
+    • Histórico de preços para referência.
+    • Sistema de reputação de vendedores.
+13.3 Loja da Casa
+    • Inventário fixo: comida simples, materiais comuns, consumíveis básicos.
+    • Rotação diária/semanal: itens raros, equipamentos com buffs leves, receitas.
+    • Ofertas especiais: pacotes com desconto; kits para iniciantes.
+    • Moeda Premium: apenas para cosméticos, personalização e NFTs limitados.
+13.4 Classificação NFT vs Não‑NFT
+NFTs:
+    • 🐸 Sapos (Comum, Incomum, Raro; Grátis só se “mintado”).
+    • 🧥 Equipamentos cosméticos raros/limitados (pescoço, costas).
+    • 🎨 Skins exclusivas de eventos.
+    • 📜 Blueprints lendários (receitas únicas e não replicáveis).
+    • 🧪 Itens de breeding exclusivos (ex.: Elixir Mutagênico).
+Não‑NFTs:
+    • 🍖 Comidas (cruas/preparadas).
+    • 🪵 Materiais comuns e raros de craft.
+    • 🧃 Consumíveis (cura, energia, buffs).
+    • ⚒ Equipamentos comuns craftáveis.
+    • 🧩 Itens de suporte ao breeding craftáveis.
+    • 💰 Moeda interna.
+    • 🎯 Itens temporários/eventos recorrentes.
+13.5 Interação entre as Economias
+    • Mercado On‑Chain:
+    • Negociação de NFTs (skins, equipamentos raros, sapos mintados).
+    • Valores definidos pelo mercado de jogadores.
+    •     Negociação de NFTs (skins, equipamentos raros, sapos mintados).
+    •     Valores definidos pelo mercado de jogadores.
+    • Negociação de NFTs (skins, equipamentos raros, sapos mintados).
+    • Valores definidos pelo mercado de jogadores.
+    • Mercado Interno:
+    • Itens não‑NFT circulam livremente, sem registro blockchain.
+    • Essencial para progresso de quem não opera com NFTs.
+    •     Itens não‑NFT circulam livremente, sem registro blockchain.
+    •     Essencial para progresso de quem não opera com NFTs.
+    • Itens não‑NFT circulam livremente, sem registro blockchain.
+    • Essencial para progresso de quem não opera com NFTs.
+14. ♿ Acessibilidade e Qualidade de Vida (QoL)
+Essa parte garante que o Mundo dos Sapos seja inclusivo, confortável de jogar e conte com recursos de qualidade de vida para aumentar o engajamento e reduzir fricções desnecessárias.
+14.1 Acessibilidade Visual
+    • Modos daltônicos:
+    • Protanopia
+    • Deuteranopia
+    • Tritanopia Cada modo aplica um filtro calibrado e substitui elementos essenciais por texturas/símbolos para não depender apenas da cor.
+    •     Protanopia
+    •     Deuteranopia
+    •     Tritanopia Cada modo aplica um filtro calibrado e substitui elementos essenciais por texturas/símbolos para não depender apenas da cor.
+    • Protanopia
+    • Deuteranopia
+    • Tritanopia Cada modo aplica um filtro calibrado e substitui elementos essenciais por texturas/símbolos para não depender apenas da cor.
+    • Texturas e ícones auxiliares em elementos-chave (barras de status, marcadores de loot, raridade de item).
+    • Paleta de cores compatível com padrões WCAG 2.1 para contraste mínimo garantido.
+14.2 Acessibilidade Auditiva
+    • Legendas opcionais para todos os efeitos sonoros narrativos (ex.: [som de trovão]).
+    • Controle independente de volume de música, efeitos e vozes.
+    • Feedback visual complementar para alertas e notificações importantes.
+14.3 Acessibilidade Motora
+    • Reconfiguração completa de controles.
+    • Opção de movimentação assistida (pathfinding simples no Plaza e nas Hunts).
+    • Alternativa de combate baseada em menus/turnos simplificados, para quem não pode executar comandos rápidos.
+14.4 Qualidade de Vida (QoL)
+    • Favoritos e filtros no inventário e mercado para acesso rápido.
+    • Auto‑stack de itens iguais.
+    • Histórico de loot para consultas posteriores.
+    • Sistema de busca dentro das receitas de crafting.
+    • Timer de regeneração de energia e fome visível na interface.
+    • Alertas de status crítico de fome e vida.
+    • Salvamento automático em checkpoints seguros.
+💎 15. Modelo de Monetização Completo
+O Mundo dos Sapos seguirá um modelo F2P (free‑to‑play) com camadas premium e um ecossistema híbrido (in‑game + on‑chain) que atende tanto jogadores casuais quanto colecionadores/investidores.
+15.1 Estrutura de Moedas
+    • Moeda Interna — “Moedas da Lagoa” (🪙)
+    • Ganho: jogando Hunts, missões, eventos, vendendo loot comum para NPC.
+    • Uso: consumíveis, crafting, reparos, taxas de mercado interno.
+    • Não é cripto, não sai do jogo.
+    •     Ganho: jogando Hunts, missões, eventos, vendendo loot comum para NPC.
+    •     Uso: consumíveis, crafting, reparos, taxas de mercado interno.
+    •     Não é cripto, não sai do jogo.
+    • Ganho: jogando Hunts, missões, eventos, vendendo loot comum para NPC.
+    • Uso: consumíveis, crafting, reparos, taxas de mercado interno.
+    • Não é cripto, não sai do jogo.
+    • Moeda Premium — “Pérolas Ancestrais” (💎)
+    • Ganho: compra com dinheiro real, prêmios sazonais, troca limitada por Moedas da Lagoa (com taxa).
+    • Uso: cosméticos, passes de temporada, acelerar crafting/breeding, Hunts especiais, compra de NFTs internos.
+    •     Ganho: compra com dinheiro real, prêmios sazonais, troca limitada por Moedas da Lagoa (com taxa).
+    •     Uso: cosméticos, passes de temporada, acelerar crafting/breeding, Hunts especiais, compra de NFTs internos.
+    • Ganho: compra com dinheiro real, prêmios sazonais, troca limitada por Moedas da Lagoa (com taxa).
+    • Uso: cosméticos, passes de temporada, acelerar crafting/breeding, Hunts especiais, compra de NFTs internos.
+    • Cripto/NFT (Rede escolhida)
+    • Ativos únicos com liquidez externa (equipamentos raros, sapos mintados, blueprints lendários).
+    • Troca peer‑to‑peer no marketplace do jogo ou integrado a mercados externos.
+    •     Ativos únicos com liquidez externa (equipamentos raros, sapos mintados, blueprints lendários).
+    •     Troca peer‑to‑peer no marketplace do jogo ou integrado a mercados externos.
+    • Ativos únicos com liquidez externa (equipamentos raros, sapos mintados, blueprints lendários).
+    • Troca peer‑to‑peer no marketplace do jogo ou integrado a mercados externos.
+15.2 Fontes de Receita (para o jogo)
+    • 💳 Venda de Pérolas Ancestrais — pacotes com bônus progressivos.
+    • 🛍 Lojas de Cosméticos/NFTs — skins, equipamentos raros de eventos.
+    • 📜 Blueprints Exclusivos — limitados e vendidos em leilões.
+    • 🎟 Passes de Temporada/Eventos — liberam conteúdo extra e recompensas exclusivas.
+    • 💱 Taxas de Mercado On‑Chain — porcentagem sobre trocas de NFTs.
+    • 🚀 Serviços de Conveniência — aceleração de processos, teleporte, slots extras de breeding.
+15.3 Fontes de Ganho (para o jogador)
+    • Loot e crafting de itens vendáveis no mercado interno.
+    • Participação em eventos com recompensas de alto valor.
+    • Venda de NFTs raros obtidos por drop ou breeding.
+    • Conversão limitada de Moeda Interna → Moeda Premium (com taxa alta para controle).
+15.4 Tipos de Consumidor
+    • Free Player
+    • Não investe dinheiro real.
+    • Foca em loot, crafting, mercado interno.
+    • Pode acessar NFTs via drop ou troca, mas com menor frequência.
+    •     Não investe dinheiro real.
+    •     Foca em loot, crafting, mercado interno.
+    •     Pode acessar NFTs via drop ou troca, mas com menor frequência.
+    • Não investe dinheiro real.
+    • Foca em loot, crafting, mercado interno.
+    • Pode acessar NFTs via drop ou troca, mas com menor frequência.
+    • Premium Player
+    • Compra moeda premium e passes.
+    • Foca na personalização e conveniência.
+    • Tem acesso mais rápido a conteúdos e aceleração de progressão.
+    •     Compra moeda premium e passes.
+    •     Foca na personalização e conveniência.
+    •     Tem acesso mais rápido a conteúdos e aceleração de progressão.
+    • Compra moeda premium e passes.
+    • Foca na personalização e conveniência.
+    • Tem acesso mais rápido a conteúdos e aceleração de progressão.
+    • Colecionador/Trader
+    • Investe em NFTs raros.
+    • Interessa‑se por skins limitadas e breeding estratégico.
+    • Atua no mercado externo para retorno financeiro.
+    •     Investe em NFTs raros.
+    •     Interessa‑se por skins limitadas e breeding estratégico.
+    •     Atua no mercado externo para retorno financeiro.
+    • Investe em NFTs raros.
+    • Interessa‑se por skins limitadas e breeding estratégico.
+    • Atua no mercado externo para retorno financeiro.
+15.5 Sinks (Drenos de Moeda)
+    • Taxas de crafting/upgrades (moeda interna e premium).
+    • Reparos de equipamentos funcionais.
+    • Consumo constante de comida e poções.
+    • Conversão de interna → premium com taxa.
+    • Participação em eventos pagos (premium).
+15.6 Economia Segura
+    • Taxas dinâmicas: podem ser ajustadas para controlar inflação/desvalorização.
+    • Oferta limitada: NFTs e blueprints com supply fixo.
+    • Drop ajustável: loot raro adaptado via telemetria.
+    • Proteção anti‑farm: limites diários de ganhos para contas novas ou suspeitas.
+15.7 Cenários de Receita
+Cenário	ARPU (mês)	ARPDAU	Conversão %	Ticket Médio Premium
+Conservador	US$ 0,60	US$ 0,04	1,5%	US$ 8
+Médio	US$ 1,20	US$ 0,08	3%	US$ 10
+Otimista	US$ 2,00	US$ 0,12	5%	US$ 12
+Glossário: ARPU – receita média por usuário/mês ARPDAU – receita média por usuário ativo diário Conversão % – percentual de jogadores que gastam dinheiro Ticket Médio Premium – gasto médio de quem paga
+15.8 Fluxo Visual do Dinheiro
+mermaid
+flowchart TB
+J[Jogador] -->|Hunts/Missões| MI[Moeda Interna]
+J -->|Compra| MP[Moeda Premium]
+MI -->|Craft/Taxas/Conversão| MP
+MP -->|Premium Store / NFTs| Jogo[Receita Jogo]
+NFTs -->|Marketplace| Jogadores
+Marketplace -->|Taxa| Jogo
+📢 16. Como o Jogador Ganha Dinheiro
+Dentro do Mundo dos Sapos, existem quatro vias principais de geração de valor para o jogador:
+    • Mercado Interno (In‑Game)
+    • Vender loot comum, materiais e consumíveis para outros jogadores via moedas da Lagoa.
+    • Apesar de não ser dinheiro real, esse fluxo alimenta progressão e prepara para alcançar ativos de maior valor.
+    •     Vender loot comum, materiais e consumíveis para outros jogadores via moedas da Lagoa.
+    •     Apesar de não ser dinheiro real, esse fluxo alimenta progressão e prepara para alcançar ativos de maior valor.
+    • Vender loot comum, materiais e consumíveis para outros jogadores via moedas da Lagoa.
+    • Apesar de não ser dinheiro real, esse fluxo alimenta progressão e prepara para alcançar ativos de maior valor.
+    • Eventos e Hunts Raras
+    • Participação em Hunts, chefes e eventos sazonais com chance de drop de NFTs, blueprints lendários ou cosméticos limitados.
+    • Esses ativos têm mercado próprio, podendo ser vendidos internamente (por moeda premium) ou externamente (em cripto).
+    •     Participação em Hunts, chefes e eventos sazonais com chance de drop de NFTs, blueprints lendários ou cosméticos limitados.
+    •     Esses ativos têm mercado próprio, podendo ser vendidos internamente (por moeda premium) ou externamente (em cripto).
+    • Participação em Hunts, chefes e eventos sazonais com chance de drop de NFTs, blueprints lendários ou cosméticos limitados.
+    • Esses ativos têm mercado próprio, podendo ser vendidos internamente (por moeda premium) ou externamente (em cripto).
+    • Breeding e Venda de Sapos
+    • Criar sapos raros ou com skills valiosas e listá‑los no marketplace on‑chain.
+    • O valor depende de raridade, aparência, habilidades e demanda de outros jogadores.
+    •     Criar sapos raros ou com skills valiosas e listá‑los no marketplace on‑chain.
+    •     O valor depende de raridade, aparência, habilidades e demanda de outros jogadores.
+    • Criar sapos raros ou com skills valiosas e listá‑los no marketplace on‑chain.
+    • O valor depende de raridade, aparência, habilidades e demanda de outros jogadores.
+    • Trocas P2P On‑Chain
+    • Venda de NFTs para outros jogadores em mercados externos integrados (ex.: OpenSea, Element), recebendo cripto diretamente na carteira conectada.
+    •     Venda de NFTs para outros jogadores em mercados externos integrados (ex.: OpenSea, Element), recebendo cripto diretamente na carteira conectada.
+    • Venda de NFTs para outros jogadores em mercados externos integrados (ex.: OpenSea, Element), recebendo cripto diretamente na carteira conectada.
+🛡 17. Como o Jogo Guarda e Movimenta o Dinheiro
+Transparência e segurança são pilares para manter a confiança dos jogadores.
+17.1 Custódia On‑Chain
+    • Ativos NFT (sapos, equipamentos, blueprints) ficam sempre na carteira blockchain do jogador ou na custódia segura do jogo (custodial wallet) se ele optar pela solução simples.
+    • Transações ocorrem via smart contracts auditados, com taxas claras.
+17.2 Custódia Off‑Chain
+    • Moeda Interna e Premium ficam armazenadas no banco de dados do jogo, vinculadas à conta do jogador.
+    • Protetores contra fraude: logs de transações, limites diários de transferência, verificações anti‑bot.
+17.3 Receitas e Tesouraria do Projeto
+    • Carteira‑cofre (multi‑assinatura) guarda a parte do time: receitas de vendas premium, taxas de marketplace e reservas para eventos futuros.
+    • Fundo de Liquidez para recompensar eventos e manter valor de mercado dos ativos.
+17.4 Proteções
+    • Auditoria externa de contratos inteligentes antes de cada grande atualização.
+    • Backup diário de dados off‑chain.
+    • Seguro contra falhas críticas em parceiros de custódia cripto.
+🔄 18. Fluxo Simplificado
+mermaid
+flowchart LR
+subgraph Jogador
+L[Hunt/Eventos] --> LOOT[Loot Comum/NFT]
+LOOT -->|Vender in‑game| MI[Moedas da Lagoa]
+LOOT -->|Vender on‑chain| CRIP[Cripto]
+end
+
+subgraph Jogo
+MI -.armazenado em-> DB[(Banco de Dados)]
+CRIP -.via-> WALLET[(Carteira do jogador)]
+TAXA[Taxa de venda] --> TESOURARIA[Carteira‑cofre]
+end
+💡 Resumo para o jogador: você pode jogar e lucrar vendendo itens comuns internamente ou ativos raros/NFTs externamente. 💡 Resumo para nós: guardamos moedas internas e premium no nosso banco seguro, ativos NFT em contratos e carteiras blockchain, e mantemos uma tesouraria controlada por multi‑assinatura para receitas e prêmios.
+📖 Guia do Jogador — Ganhos e Retiradas no Mundo dos Sapos
+Este guia mostra passo a passo como você pode transformar o seu tempo de jogo em valor — seja para reinvestir na progressão ou sacar para o mundo real.
+1️⃣ Ganhe jogando
+Você tem várias formas de acumular valor:
+    • Hunts e Missões: lute, explore e complete objetivos para obter loot.
+    • Eventos Sazonais: participações garantem itens especiais, alguns deles NFTs.
+    • Breeding Estratégico: crie sapos raros ou com habilidades únicas e valorize-os.
+    • Mercado Interno: venda itens e consumíveis comuns para outros jogadores (moeda interna).
+    • Marketplace On‑Chain: liste e negocie seus NFTs (sapos, equipamentos, blueprints raros) com outros jogadores.
+💡 Dica: raridade, aparência e habilidades únicas são os fatores que mais aumentam o valor de venda.
+2️⃣ Do loot ao dinheiro
+Fluxo simples:
+    • Você joga → recebe loot (item comum ou NFT).
+    • Item comum → vende por Moedas da Lagoa (internas).
+    • NFT → vende no Marketplace On‑Chain → recebe cripto na carteira conectada.
+    • Moeda Interna → Premium: pode converter (com taxa) para comprar NFTs/serviços.
+    • Cripto → Dinheiro real: usando sua corretora ou carteira preferida.
+3️⃣ Como retirar
+    • Conecte uma carteira compatível (ex.: MetaMask) à sua conta do jogo.
+    • Ao vender um NFT, o valor em cripto cai direto na sua carteira.
+    • Transfira para uma corretora (ex.: Binance, Mercado Bitcoin) e saque para sua conta bancária.
+🔒 Segurança: nunca compartilhe suas chaves privadas ou seed phrase.
+4️⃣ Como o jogo guarda seu dinheiro
+    • Moedas Internas/Premium: ficam registradas no banco de dados seguro do jogo, vinculadas à sua conta.
+    • NFTs/cripto: ficam na blockchain, na sua carteira ou numa custódia segura se preferir simplicidade.
+    • Tesouraria do Jogo: carteira multi‑assinatura usada para:
+    • Arrecadar taxas de mercado.
+    • Guardar fundos para recompensas de eventos.
+    • Garantir liquidez dos ativos raros.
+    •     Arrecadar taxas de mercado.
+    •     Guardar fundos para recompensas de eventos.
+    •     Garantir liquidez dos ativos raros.
+    • Arrecadar taxas de mercado.
+    • Guardar fundos para recompensas de eventos.
+    • Garantir liquidez dos ativos raros.
+5️⃣ Proteções e garantias
+    • Contratos inteligentes auditados antes de cada lançamento importante.
+    • Taxas transparentes e sempre exibidas antes de cada transação.
+    • Logs de transações para você conferir todo o seu histórico.
+    • Sistema anti‑bot/fraude para proteger a economia.
+6️⃣ Visual do Fluxo de Ganhos e Retiradas
+mermaid
+flowchart LR
+J[Você joga] --> L[Loot comum ou NFT]
+L -->|Venda interna| MI[Moedas da Lagoa]
+MI -->|Conversão opcional| MP[Pérolas Ancestrais]
+L -->|Venda NFT| CRIP[Cripto na carteira]
+CRIP --> C[Corretora]
+C --> $[Conta bancária]
+💬 Resumo para o jogador:
+    • Ganhar: jogando e explorando oportunidades raras.
+    • Reter: moedas internas e NFTs ficam seguras em seus respectivos ambientes.
+    • Sacar: NFTs viram cripto, cripto vira dinheiro na sua conta.
+
+❓ FAQ – Ganhar e Retirar Dinheiro no Mundo dos Sapos
+💰 Como posso ganhar dinheiro jogando?
+Você pode gerar valor de quatro formas:
+    • Vendendo loot comum no Mercado Interno (moedas da Lagoa) para outros jogadores.
+    • Participando de eventos e Hunts raras com drops de NFTs ou itens únicos.
+    • Fazendo breeding estratégico de sapos raros e vendendo no marketplace on‑chain.
+    • Negociando NFTs diretamente com outros jogadores em mercados externos, recebendo cripto.
+🪙 Qual a diferença entre Moeda Interna, Premium e Cripto?
+    • Moeda Interna (Moedas da Lagoa): só circula dentro do jogo, obtida jogando, usada para itens comuns e crafting.
+    • Moeda Premium (Pérolas Ancestrais): comprada com dinheiro real ou conquistada em eventos; usada para cosméticos, acelerações e acesso a Hunts especiais.
+    • Cripto: valor real recebido na sua carteira ao vender NFTs, que pode ser convertido para dinheiro via corretoras.
+🔐 Onde o meu dinheiro e meus itens ficam guardados?
+    • Moeda Interna/Premium: armazenadas no banco de dados seguro do jogo, ligadas à sua conta.
+    • NFTs/cripto: na blockchain, na sua própria carteira conectada ou numa carteira custodial do jogo (se preferir simplicidade).
+    • O jogo mantém uma tesouraria multi‑assinatura para taxas e fundos de recompensa.
+💱 Como converter itens em dinheiro real?
+    • Obtenha um NFT jogando ou criando via breeding.
+    • Venda no marketplace on‑chain — cripto cai direto na sua carteira.
+    • Transfira da carteira para uma corretora confiável.
+    • Saque para a sua conta bancária.
+🛡 O jogo pode mexer nos meus NFTs ou cripto?
+Não — se os ativos estiverem na sua carteira pessoal, só você tem acesso. Se estiverem em carteira custodial do jogo, há mecanismos seguros, mas você confia temporariamente a guarda ao sistema.
+📉 Existem taxas?
+Sim, mas elas são sempre exibidas antes de qualquer operação:
+    • Taxa fixa ou percentual no marketplace on‑chain.
+    • Taxa de conversão de Moeda Interna para Premium.
+    • Taxas da rede blockchain (gas).
+⚠️ Como o jogo garante segurança e estabilidade da economia?
+    • Contratos inteligentes auditados antes de grandes lançamentos.
+    • Logs completos de transações.
+    • Monitoramento anti‑fraude e anti‑bot.
+    • Ajustes dinâmicos de drop e recompensas para manter equilíbrio.
+📈 Dicas para maximizar seus ganhos
+    • Foque em eventos e Hunts que droppam NFTs limitados.
+    • Estude o mercado: veja o que outros jogadores estão comprando caro.
+    • Use itens de suporte no breeding para aumentar chances de raridade.
+    • Mantenha sua carteira cripto segura e com 2FA na corretora.
+
+📊 Infográfico (versão texto para arte)
+TÍTULO:
+💰 Do Pulo ao Lucro: Seu Caminho no Mundo dos Sapos
+Seção 1 – Ganhe Jogando
+🎯 Atividades que geram valor:
+    • Caçar em Hunts e derrotar chefes
+    • Participar de eventos sazonais
+    • Criar sapos raros via breeding
+    • Vender loot no mercado interno
+    • Negociar NFTs no marketplace on‑chain
+Seção 2 – Do Loot ao Dinheiro
+Fluxo:
+Código
+[Você joga] 
+   ↓
+[Recebe loot] —(comum)→ [Moedas da Lagoa]
+                  —(NFT)→ [Venda no Marketplace On‑Chain] → [Cripto na Carteira]
+💡 Itens comuns alimentam sua progressão; NFTs podem gerar valor real.
+Seção 3 – Como Retirar
+    • Conectar carteira compatível (MetaMask, etc.)
+    • Vender NFT no marketplace → receber cripto
+    • Transferir para corretora confiável
+    • Sacar para sua conta bancária
+Seção 4 – Onde o Jogo Guarda o Seu Valor
+🪙 Moedas Internas/Premium: Banco de dados seguro, ligado à sua conta 🖼 NFTs: Blockchain, na sua carteira ou custódia segura 🏦 Tesouraria multi‑assinatura do jogo: taxas + fundos de eventos
+Seção 5 – Segurança Sempre
+    • Contratos auditados
+    • Taxas transparentes
+    • Log de transações
+    • Proteção anti‑bot e anti‑fraude
+🎨 Sugestão de layout para o designer:
+    • Topo: título com ilustração de um sapo segurando moedas e um NFT brilhante.
+    • Colunas:
+    • Esquerda: “Ganhe Jogando” com ícones (espada, bandeira de evento, ovo de sapo, moeda, NFT).
+    • Centro: “Fluxo” em estilo fluxograma vertical com setas e cores (verde para loot comum, dourado para NFT).
+    • Direita: “Como Retirar” com ícones de carteira, marketplace, corretora, banco.
+    •     Esquerda: “Ganhe Jogando” com ícones (espada, bandeira de evento, ovo de sapo, moeda, NFT).
+    •     Centro: “Fluxo” em estilo fluxograma vertical com setas e cores (verde para loot comum, dourado para NFT).
+    •     Direita: “Como Retirar” com ícones de carteira, marketplace, corretora, banco.
+    • Esquerda: “Ganhe Jogando” com ícones (espada, bandeira de evento, ovo de sapo, moeda, NFT).
+    • Centro: “Fluxo” em estilo fluxograma vertical com setas e cores (verde para loot comum, dourado para NFT).
+    • Direita: “Como Retirar” com ícones de carteira, marketplace, corretora, banco.
+    • Rodapé: barra de “Segurança” com ícones de cadeado, escudo e checklist.
+
+💵 19. Monetização e Gestão de Receita
+19.1 Como o projeto monetiza
+    • Venda direta de moeda premium (💎 Pérolas Ancestrais)
+    • Pacotes na loja oficial com bônus e promoções.
+    • Fonte mais previsível de receita recorrente.
+    •     Pacotes na loja oficial com bônus e promoções.
+    •     Fonte mais previsível de receita recorrente.
+    • Pacotes na loja oficial com bônus e promoções.
+    • Fonte mais previsível de receita recorrente.
+    • Lançamento e venda de NFTs exclusivos
+    • Sapos mintados, skins limitadas, equipamentos raros de evento.
+    • Venda direta (preço fixo) ou leilões.
+    • Supply controlado gera escassez e valor percebido.
+    •     Sapos mintados, skins limitadas, equipamentos raros de evento.
+    •     Venda direta (preço fixo) ou leilões.
+    •     Supply controlado gera escassez e valor percebido.
+    • Sapos mintados, skins limitadas, equipamentos raros de evento.
+    • Venda direta (preço fixo) ou leilões.
+    • Supply controlado gera escassez e valor percebido.
+    • Taxas de marketplace on‑chain
+    • Percentual sobre cada transação NFT entre jogadores (royalties automáticos via contrato).
+    • Lucro sempre que um item troca de mãos, mesmo fora do jogo.
+    •     Percentual sobre cada transação NFT entre jogadores (royalties automáticos via contrato).
+    •     Lucro sempre que um item troca de mãos, mesmo fora do jogo.
+    • Percentual sobre cada transação NFT entre jogadores (royalties automáticos via contrato).
+    • Lucro sempre que um item troca de mãos, mesmo fora do jogo.
+    • Passes de temporada e eventos especiais
+    • Conteúdo extra, Hunts únicas, loot especial.
+    • Pago em moeda premium ou diretamente em cripto.
+    •     Conteúdo extra, Hunts únicas, loot especial.
+    •     Pago em moeda premium ou diretamente em cripto.
+    • Conteúdo extra, Hunts únicas, loot especial.
+    • Pago em moeda premium ou diretamente em cripto.
+    • Itens e serviços de conveniência
+    • Boosts de XP, aceleração de crafting/breeding, slots extras, teleporte rápido.
+    • Pequenos gastos frequentes que, no volume, geram grande receita.
+    •     Boosts de XP, aceleração de crafting/breeding, slots extras, teleporte rápido.
+    •     Pequenos gastos frequentes que, no volume, geram grande receita.
+    • Boosts de XP, aceleração de crafting/breeding, slots extras, teleporte rápido.
+    • Pequenos gastos frequentes que, no volume, geram grande receita.
+    • Parcerias e licenciamento
+    • Collabs com artistas e marcas para skins/eventos patrocinados.
+    • Pode incluir revenue share ou taxa fixa.
+    •     Collabs com artistas e marcas para skins/eventos patrocinados.
+    •     Pode incluir revenue share ou taxa fixa.
+    • Collabs com artistas e marcas para skins/eventos patrocinados.
+    • Pode incluir revenue share ou taxa fixa.
+19.2 Mini‑Taxa Embutida (Markup Micropercentual)
+    • Aplicar um pequeno acréscimo automático sobre transações on‑chain/premium.
+    • Ex.: Preço base 0,10 POL → Cobrado 0,11 POL (+10%).
+    • Diferença vai direto para a Tesouraria do Jogo.
+Onde aplicar:
+    • Taxas de breeding on‑chain
+    • Mintagem de NFTs em eventos especiais
+    • Compras de equipamentos raros/cosméticos NFT
+    • Entrada em Hunts premium
+Distribuição sugerida da arrecadação:
+    • 50% → Custos e operação
+    • 30% → Fundo de eventos/recompensas
+    • 20% → Reserva de liquidez
+19.3 Simulação de receita anual das mini‑taxas
+Premissas:
+    • Valor base médio: 0,10 POL
+    • Markup: +10% (0,01 POL extra)
+    • Cotação POL: US$ 0,60
+Cenário	Transações/mês	Extra por transação (POL)	Extra/mês (POL)	Extra/mês (US$)	Extra/ano (US$)
+Conservador	5.000	0,01	50	30,00	360,00
+Médio	20.000	0,01	200	120,00	1.440,00
+Otimista	50.000	0,01	500	300,00	3.600,00
+19.4 Como o dinheiro é guardado/gerido
+    • Tesouraria on‑chain: carteira multi‑assinatura para receitas em cripto/NFT, protegida contra uso unilateral.
+    • Contas comerciais tradicionais: para receitas da loja (cartão, PIX etc.).
+    • Reserva de liquidez: fundo para recomprar ativos se necessário manter preços.
+    • Caixa de operação: cobre servidores, equipe, marketing e desenvolvimento.
+19.5 A equação simples
+Jogadores se divertem + gastam para acelerar, colecionar ou se diferenciar → você captura valor via vendas diretas e taxas → parte é reinvestida no jogo para aumentar o ciclo.
+
+Anexos a seguir — Compilado Final do Documento Mestre 🐸
+A1: Resumo de Hunts (H1 a H20)
+Para referência rápida, aqui está o quadro geral consolidado com todas as informações-chave das caçadas.
+Hunt	Nível	Fases	XP Total	Drop Principal	Drop Secundário	Evento Notável
+H1 Colônia das Formigas	1‑3	3	9	Comida Crua Comum	Materiais Comuns	—
+H2 Lago dos Girinos	2‑5	3	9	Comida Crua Aquática	Equip. Pescoço Comum	—
+H3 Pântano Nebuloso	4‑7	3	13	Materiais Raros	Consumível Cura Comum	—
+H4 Floresta Sombria	5‑8	3	16	Equip. Costas Comum	Consumível Energia Raro	—
+H5 Montanha Rochosa	7‑10	3	21	Materiais Raros	Pedra Craft Rara	—
+H6 Cavernas de Cristal	9‑12	3	23	Materiais de Cristal	Consumível Cura Raro	—
+H7 Deserto Escaldante	11‑14	3	23	Materiais Raros	Consumível Energia Comum	—
+H8 Vulcão Ativo	13‑16	3	27	Materiais de Lava	Consumível Buff DEF	—
+H9 Penhascos Ventosos	15‑18	3	31	Equip. Costas Comum	Buff VEL	—
+H10 Ruínas Afundadas	17‑20	3	31	Materiais Lendários	Consumível Energia Raro	Tesouro Perdido
+H11 Campo Congelado	19‑22	3	33	Equip. Costas Comum	Comida Crua Rara	—
+H12 Gruta das Sombras	21‑24	3	34	Blueprint Épico	Materiais Raros	—
+H13 Selva Antiga	23‑26	3	36	Equip. Pescoço Raro	Consumível Cura Raro	—
+H14 Penhascos Congelados	25‑28	3	39	Equip. Costas Comum	Materiais Lendários	Fênix do Gelo
+H15 Fortaleza Abandonada	27‑30	3	43	Equip. Pescoço Raro	Materiais Lendários	—
+H16 Deserto Areia Negra	29‑32	3	46	Pedra Rara	Materiais Lendários	—
+H17 Cratera Lunar	31‑34	3	48	Pedra Rara	Consumível Buff DEF	Ritual Arcano
+H18 Vale do Crepúsculo	33‑36	3	51	Equip. Costas Raro	Consumível Buff VEL	—
+H19 Catedral Submersa	35‑38	3	53	Materiais Lendários	Consumível Energia Comum	—
+H20 Trono dos Ancestrais	39‑40	3	56	Equip. Lendário	Blueprint Lendário	Evento Final
+A2: Tabelas de Consumíveis
+Cura
+Item	Efeito	Raridade	Origem
+Poção de Cura Comum	+30% Vida	Comum	Craft/Predadores
+Poção de Cura Rara	Vida total + DEF 5 min	Raro	Chefes
+Kit Médico Completo	Vida total + 50% Energia	Épico	Evento
+Energia
+Item	Efeito	Raridade	Origem
+Energético Natural	+20% Energia	Comum	Craft
+Tônico de Energia Raro	+50% Energia + VEL 3 min	Raro	Chefes/Eventos
+Buffs Temporários
+Item	Efeito	Raridade	Origem
+Erva Rara	+15% ATK 5 min	Raro	Evento
+Fruto da Agilidade	+15% VEL 5 min	Raro	Loot raro
+A3: Tabelas de Craft e Equipamentos
+    • Slots: Pescoço e Costas
+    • Função: cosmética e/ou buffs leves
+    • NFTs: séries limitadas, cosméticos exclusivos
+    • Não‑NFTs: craftáveis, uso livre
+Equipamento	Slot	Buff	Raridade	Origem
+Gravata Dourada	Pescoço	+2 DEF	Raro	Craft/mercado
+Mochila Explorer	Costas	+5% loot comum	Raro	Craft/missão
+Capa Heroica Azul	Costas	+1 ATK/+1 VEL	Comum	Craft
+A4: Glossário
+    • Burn: ação de remover permanentemente um sapo, gerando item/valor em troca.
+    • Blueprint: receita para crafting avançado.
+    • Cooldown: tempo de espera para reutilizar um item/habilidade.
+    • NFT: ativo único registrado em blockchain.
+    • Não‑NFT: item interno do jogo sem registro blockchain.
+    • PvE: Player versus Environment.
+    • PvP: Player versus Player.
+    • Slot: espaço de equipamento (Pescoço/Costas).
+
+Mundo dos Sapos — Extras de balanceamento, contratos, rede e arte genética
+Abaixo estão todos os extras pedidos, prontos para copiar e colar em documentos ou planilhas. No final há checklists e próximos passos.
+1. Modelos de balanceamento e metas numéricas
+1.1 Curva de XP, tempo e metas
+    • A meta é que cada faixa de nível tenha um “tempo para upar” estável e previsível.
+    • Curva proposta (XP por nível):
+    • Fórmula simples de custo incremental:
+    • XP do nível nn (para ir de n→n+1n \to n+1): XP(n)=15⋅n\mathrm{XP}(n)=15\cdot n
+    • XP acumulada até o nível nn: XPacc(n)=15⋅n(n−1)2\mathrm{XP_{acc}}(n)=15\cdot \frac{n(n-1)}{2}
+    •     Fórmula simples de custo incremental:
+    •     XP do nível nn (para ir de n→n+1n \to n+1): XP(n)=15⋅n\mathrm{XP}(n)=15\cdot n
+    •     XP acumulada até o nível nn: XPacc(n)=15⋅n(n−1)2\mathrm{XP_{acc}}(n)=15\cdot \frac{n(n-1)}{2}
+    •     XP do nível nn (para ir de n→n+1n \to n+1): XP(n)=15⋅n\mathrm{XP}(n)=15\cdot n
+    •     XP acumulada até o nível nn: XPacc(n)=15⋅n(n−1)2\mathrm{XP_{acc}}(n)=15\cdot \frac{n(n-1)}{2}
+    •     XP do nível nn (para ir de n→n+1n \to n+1): XP(n)=15⋅n\mathrm{XP}(n)=15\cdot n
+    •     XP acumulada até o nível nn: XPacc(n)=15⋅n(n−1)2\mathrm{XP_{acc}}(n)=15\cdot \frac{n(n-1)}{2}
+    • Fórmula simples de custo incremental:
+    • XP do nível nn (para ir de n→n+1n \to n+1): XP(n)=15⋅n\mathrm{XP}(n)=15\cdot n
+    • XP acumulada até o nível nn: XPacc(n)=15⋅n(n−1)2\mathrm{XP_{acc}}(n)=15\cdot \frac{n(n-1)}{2}
+    •     XP do nível nn (para ir de n→n+1n \to n+1): XP(n)=15⋅n\mathrm{XP}(n)=15\cdot n
+    •     XP acumulada até o nível nn: XPacc(n)=15⋅n(n−1)2\mathrm{XP_{acc}}(n)=15\cdot \frac{n(n-1)}{2}
+    • XP do nível nn (para ir de n→n+1n \to n+1): XP(n)=15⋅n\mathrm{XP}(n)=15\cdot n
+    • XP acumulada até o nível nn: XPacc(n)=15⋅n(n−1)2\mathrm{XP_{acc}}(n)=15\cdot \frac{n(n-1)}{2}
+Tabela de XP 1–30
+Nível	XP para upar	XP acumulada
+1	15	0
+2	30	15
+3	45	45
+4	60	90
+5	75	150
+6	90	225
+7	105	315
+8	120	420
+9	135	540
+10	150	675
+11	165	825
+12	180	990
+13	195	1170
+14	210	1365
+15	225	1575
+16	240	1800
+17	255	2040
+18	270	2295
+19	285	2565
+20	300	2850
+21	315	3150
+22	330	3465
+23	345	3795
+24	360	4140
+25	375	4500
+26	390	4875
+27	405	5265
+28	420	5670
+29	435	6090
+30	—	6525
+    • Metas de tempo:
+    • Early (1–10): 20–30 min/nível
+    • Mid (11–20): 30–45 min/nível
+    • Late (21–30): 45–60 min/nível
+    •     Early (1–10): 20–30 min/nível
+    •     Mid (11–20): 30–45 min/nível
+    •     Late (21–30): 45–60 min/nível
+    • Early (1–10): 20–30 min/nível
+    • Mid (11–20): 30–45 min/nível
+    • Late (21–30): 45–60 min/nível
+1.2 Economia de energia, fome e vida
+    • Energia:
+    • Regeneração base: rE=1r_E=1 a cada 2 min (ajustável por raridade/eventos)
+    • Custo de Hunt: entrada 5 + 5 por fase (Hunt de 3 fases = 20 energia)
+    •     Regeneração base: rE=1r_E=1 a cada 2 min (ajustável por raridade/eventos)
+    •     Custo de Hunt: entrada 5 + 5 por fase (Hunt de 3 fases = 20 energia)
+    • Regeneração base: rE=1r_E=1 a cada 2 min (ajustável por raridade/eventos)
+    • Custo de Hunt: entrada 5 + 5 por fase (Hunt de 3 fases = 20 energia)
+    • Fome:
+    • Decai rF=1r_F=1 a cada 5 min em tempo real.
+    • Se Fome = 0 → Vida decai rV=1r_V=1 a cada 10 min.
+    •     Decai rF=1r_F=1 a cada 5 min em tempo real.
+    •     Se Fome = 0 → Vida decai rV=1r_V=1 a cada 10 min.
+    • Decai rF=1r_F=1 a cada 5 min em tempo real.
+    • Se Fome = 0 → Vida decai rV=1r_V=1 a cada 10 min.
+    • Vida (descanso nutritivo):
+    • Se inativo e Fome ≥ 50% → Vida regenera rV+=3r_{V+}=3 por hora.
+    •     Se inativo e Fome ≥ 50% → Vida regenera rV+=3r_{V+}=3 por hora.
+    • Se inativo e Fome ≥ 50% → Vida regenera rV+=3r_{V+}=3 por hora.
+1.3 Orçamento de loot por tier de Hunt
+    • Tier 1 (nível 1–5): 1 item garantido por fase + 10% chance extra
+    • Tier 2 (6–10): 1 garantido + 20% extra
+    • Tier 3 (11–20): 1 garantido + 30% extra
+    • Tier 4 (21–30): 1 garantido + 40% extra
+    • Chefes: sempre 1 garantido + tabela especial de blueprint/consumível raro
+1.4 Dano, dificuldade e progressão de inimigos
+    • Vida do inimigo por tier:
+    • Presas: HP=10+2nHP = 10 + 2n
+    • Predadores: HP=20+3nHP = 20 + 3n
+    • Chefes: HP=50+5nHP = 50 + 5n
+    • Onde nn = nível médio da Hunt
+    •     Presas: HP=10+2nHP = 10 + 2n
+    •     Predadores: HP=20+3nHP = 20 + 3n
+    •     Chefes: HP=50+5nHP = 50 + 5n
+    •     Onde nn = nível médio da Hunt
+    • Presas: HP=10+2nHP = 10 + 2n
+    • Predadores: HP=20+3nHP = 20 + 3n
+    • Chefes: HP=50+5nHP = 50 + 5n
+    • Onde nn = nível médio da Hunt
+    • Dano recomendado dos inimigos: Presas 2–4, Predadores 4–7, Chefes 8–12 por turno.
+    • Bônus de equipamentos funcionais: até +3 pontos combinados em ATK/DEF/VEL por conjunto.
+2. Tabelas-mestre de drop e loot economy
+2.1 “Quem dropa o quê” (global)
+Origem	Drop principal	Chance	Drop secundário	Chance
+Presas	Comida crua comum	80%	Materiais comuns	20%
+Predadores	Materiais raros	60%	Consumível comum (cura/energia)	40%
+Chefes	Blueprint raro/épico	40%	Consumível raro (cura/energia/buff)	60%
+Sapos selvagens	Equip. comum (pescoço/costas)	50%	Materiais comuns	50%
+Eventos	Item especial do evento	100%	Loot comum associado	0–50%
+2.2 Drop por tier de Hunt (ajuste fino)
+Tier	Blueprint	Cons. raro	Cons. comum	Materiais raros	Materiais comuns	Equip. comum
+1 (1–5)	5%	10%	35%	10%	35%	5%
+2 (6–10)	8%	12%	30%	15%	30%	5%
+3 (11–20)	12%	15%	25%	20%	25%	3%
+4 (21–30)	15%	18%	20%	25%	20%	2%
+    • Chefes adicionam: +10 p.p. em blueprint OU consumível raro (tabela específica da Hunt).
+2.3 Consumíveis de vida/energia (origem e frequência)
+Item	Tier recomendado	Origem típica	Chance média
+Poção de Cura Comum	1–4	Predadores	20–30%
+Energético Natural	1–4	Presas/Predadores/Craft	15–25%
+Poção de Cura Rara	2–4	Chefes/Evento	10–20%
+Tônico de Energia Raro	2–4	Chefes/Evento	10–15%
+Kit Médico Completo	3–4	Evento/Blueprint	2–5%
+3. Fluxos de sistemas (diagramas prontos para colar)
+Use os blocos abaixo em editores que suportam Mermaid.
+3.1 Fluxo de Hunt
+mermaid
+flowchart TD
+A[Seleciona Hunt] --> B{Nível permitido?}
+B -- Não --> Z[Escolher outra Hunt]
+B -- Sim --> C[Paga Energia de Entrada]
+C --> D[Fase 1]
+D --> E{Evento?}
+E -- Sim --> E1[Resolve Evento e Loot]
+E -- Não --> F[Combate Encontros]
+F --> G{Vitória?}
+G -- Não --> G1[Derrota: Vida <=0? PvE => Burn | PvP => Vida=1]
+G -- Sim --> H[Loot + XP]
+H --> I{Mais Fases?}
+I -- Sim --> J[Próxima Fase]
+I -- Não --> K[Conclusão da Hunt]
+K --> L[Aplicar Loot, XP total]
+L --> M[Saída / Descanso / Nova Hunt]
+3.2 Breeding
+mermaid
+flowchart TD
+A[Escolher Pais] --> B[Equipar Itens de Suporte]
+B --> C[Checar Energia 30+30]
+C --> D[Executar Breeding]
+D --> E[Sorteio 1ª Skill por raridade]
+E --> F{Ganhou 1ª?}
+F -- Não --> G[0 Skills]
+F -- Sim --> H[Sorteio 2ª Skill condicional]
+H --> I[Determinar Raridade (0.1% up, 49.9% mesma, 50% down)]
+I --> J[Aplicar Genes (com travas)]
+J --> K[Mint Filhote + Consumir Itens]
+3.3 Recuperação
+mermaid
+flowchart TD
+A[Após batalha] --> B{PvP Derrota?}
+B -- Sim --> C[Vida=1, usar cura/descanso]
+B -- Não --> D{Vida 0?}
+D -- Sim --> E[Burn obrigatório]
+D -- Não --> F{Fome >= 50% e Inativo?}
+F -- Sim --> G[Regen Vida passiva]
+F -- Não --> H[Usar Consumíveis]
+3.4 Crafting
+mermaid
+flowchart TD
+A[Materiais/Blueprints] --> B[Escolher Receita]
+B --> C{Tem ingredientes?}
+C -- Não --> D[Farm/Comprar no Mercado]
+C -- Sim --> E[Iniciar Craft (tempo/custo)]
+E --> F[Item Pronto]
+F --> G[Equipar/Consumir/Vender]
+3.5 Mercado/Plaza
+mermaid
+flowchart TD
+A[Entrar no Plaza] --> B[Chat/PM]
+A --> C[Trade P2P não-NFT]
+A --> D[Mercado: listar/comprar]
+D --> E{NFT?}
+E -- Sim --> F[On-chain (assinatura, taxa)]
+E -- Não --> G[In-game (saldo interno)]
+4. Arquitetura de contratos inteligentes (EVM)
+4.1 Módulos e responsabilidades
+    • FrogNFT (ERC-721): sapos, genome, metadados.
+    • EquipNFT (ERC-1155): cosméticos raros/limitados (NFT).
+    • BlueprintNFT (ERC-1155): blueprints épicos/lendários (NFT).
+    • BreedingManager: regras de breeding, consumo de energia, itens de suporte, emissão de filhotes.
+    • EquipRegistry: relacionamento opcional de “equipado” (tokenId do sapo → slots com NFTs).
+    • RandomnessProvider: integração VRF para sorteios justos.
+    • Marketplace (opcional): listagem/compra de NFTs in-game (ou usar mercados existentes).
+    • GameBank (custódia de taxas internas, se necessário).
+4.2 Padrões e extensões
+    • EIP-721 + EIP-2981 (royalties)
+    • EIP-1155 para itens fungíveis/semifungíveis
+    • Acesso: Ownable/AccessControl (DEFAULT_ADMIN_ROLE, MINTER_ROLE, PAUSER_ROLE)
+    • Pausable, ReentrancyGuard
+    • URI: baseURI mutável até “freeze”; possibilidade de on-chain SVG
+4.3 Estruturas e eventos (exemplo)
+solidity
+struct Genome {
+  uint64 colors;   // bit packing cores
+  uint64 patterns; // bit packing padrões
+  uint32 flags;    // raridade, mutações, etc.
+}
+
+event FrogMinted(address indexed to, uint256 indexed tokenId, Genome genome, uint8 rarity);
+event Bred(uint256 indexed parentA, uint256 indexed parentB, uint256 indexed childId);
+event Equipped(uint256 indexed frogId, uint8 slot, address itemContract, uint256 itemId);
+event Unequipped(uint256 indexed frogId, uint8 slot);
+event BlueprintUsed(address indexed user, uint256 id, uint256 amount);
+4.4 Funções-chave (assinaturas)
+solidity
+// FrogNFT
+function mint(address to, Genome calldata g, uint8 rarity) external;
+function burn(uint256 tokenId) external;
+function setBaseURI(string calldata) external;
+
+// BreedingManager
+function breed(uint256 parentA, uint256 parentB, BreedingItem[] calldata items) external payable;
+function computeOffspring(uint256 parentA, uint256 parentB, BreedingItem[] calldata items) public view returns (Genome memory, uint8 rarity, SkillRoll memory);
+function setEnergyCost(uint256 costEach) external;
+
+// EquipRegistry
+function equip(uint256 frogId, uint8 slot, address item, uint256 itemId) external;
+function unequip(uint256 frogId, uint8 slot) external;
+function getEquipment(uint256 frogId) external view returns (address[2] memory items, uint256[2] memory ids);
+
+// RandomnessProvider (VRF)
+function requestRandomWords() external returns (uint256 requestId);
+function consumeRandomness(uint256 requestId) external returns (uint256 rng);
+4.5 Segurança e boas práticas
+    • ReentrancyGuard em funções com transferência de valor.
+    • Pausable para emergência.
+    • Assinaturas EIP-712 para autorizar equip/unequip cross-contract.
+    • VRF para evitar manipulação de seed em breeding.
+    • Limitar privilégios (MINTER_ROLE somente em módulos de jogo).
+    • Testes de fuzz em distribuição de skills/raridade.
+5. Escolha de rede: comparação e recomendação
+5.1 Comparativo resumido
+Rede	Taxas	Ecossistema NFT	Pros	Contras
+Polygon PoS	Muito baixas	Amplo, integrado a grandes mercados	Barato, EVM, amplo suporte	Congestão ocasional
+Base	Baixas	Crescente, boa integração infra	Custos baixos, dev UX bom	Ecossistema ainda em expansão
+Arbitrum One	Baixas	Forte em DeFi/NFT	Escala, tooling maduro	Custos > Polygon/Base em picos
+BNB Chain	Baixas	Grande adoção retail	Usuários muitos, liquidez	Percepção centralização
+Immutable	Baixíssimas	NFT-focused	Infra para jogos, UX NFT	Menos genérico que L2 EVM padrão
+5.2 Recomendação prática
+    • Primário: Polygon PoS ou Base para taxas baixas e adoção.
+    • Secundário: Arbitrum One para escalabilidade e tooling avançado.
+    • Estratégia híbrida:
+    • Gameplay e itens não‑NFT off-chain/in-game.
+    • NFTs (sapos, cosméticos raros, blueprints lendários) on-chain.
+    • Bridge/interop futura se necessário.
+    •     Gameplay e itens não‑NFT off-chain/in-game.
+    •     NFTs (sapos, cosméticos raros, blueprints lendários) on-chain.
+    •     Bridge/interop futura se necessário.
+    • Gameplay e itens não‑NFT off-chain/in-game.
+    • NFTs (sapos, cosméticos raros, blueprints lendários) on-chain.
+    • Bridge/interop futura se necessário.
+6. Arte genética em SVG (especificação e templates)
+6.1 Camadas e ordem de render
+    • Corpo base
+    • Barriga
+    • Pernas
+    • Contorno
+    • Olhos
+    • Bochechas
+    • Boca/Nariz
+    • Ombros/Cabeça extra
+    • Padrões (pintas/listras/formas)
+    • Equipamentos (pescoço/costas)
+6.2 Codificação do genoma
+    • 16 bytes (128 bits) sugeridos:
+    • 0–3: paletas de cores (corpo, barriga, olhos, padrão)
+    • 4–7: padrões (tipo, densidade, escala, forma especial)
+    • 8–9: flags (rarezas visuais, brilho, contorno)
+    • 10–11: seed para distribuição de manchas
+    • 12–13: reserva/mutações
+    • 14–15: versão/checksum
+    •     0–3: paletas de cores (corpo, barriga, olhos, padrão)
+    •     4–7: padrões (tipo, densidade, escala, forma especial)
+    •     8–9: flags (rarezas visuais, brilho, contorno)
+    •     10–11: seed para distribuição de manchas
+    •     12–13: reserva/mutações
+    •     14–15: versão/checksum
+    • 0–3: paletas de cores (corpo, barriga, olhos, padrão)
+    • 4–7: padrões (tipo, densidade, escala, forma especial)
+    • 8–9: flags (rarezas visuais, brilho, contorno)
+    • 10–11: seed para distribuição de manchas
+    • 12–13: reserva/mutações
+    • 14–15: versão/checksum
+6.3 Mapeamento de paletas (exemplo)
+    • Corpo: [#5BC489, #3FAE6F, #2C8E59]
+    • Barriga: [#F2E6C9, #EBD9B0]
+    • Olhos: [#222222, #FFFFFF]
+    • Padrões: [#2A664A, #6AD9A8, #FFD166]
+6.4 Template SVG base (com variáveis)
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <style>
+    .body { fill: {{c_body}}; }
+    .belly { fill: {{c_belly}}; }
+    .outline { stroke: #132A13; stroke-width: 6; fill: none; }
+    .eye { fill: {{c_eye}}; }
+    .cheek { fill: {{c_cheek}}; opacity: .6; }
+    .pattern { fill: {{c_pattern}}; opacity: {{o_pattern}}; }
+  </style>
+  <g id="frog">
+    <ellipse class="body" cx="256" cy="300" rx="170" ry="140"/>
+    <ellipse class="belly" cx="256" cy="330" rx="120" ry="90"/>
+    <circle class="eye" cx="190" cy="210" r="25"/>
+    <circle class="eye" cx="322" cy="210" r="25"/>
+    <circle class="cheek" cx="200" cy="340" r="18"/>
+    <circle class="cheek" cx="312" cy="340" r="18"/>
+    <!-- Padrões simples -->
+    <circle class="pattern" cx="220" cy="270" r="18"/>
+    <circle class="pattern" cx="290" cy="250" r="14"/>
+    <!-- Contorno principal -->
+    <ellipse class="outline" cx="256" cy="300" rx="170" ry="140"/>
+  </g>
+  <!-- Slot de equipamento costas -->
+  <g id="equip_back">
+    {{svg_back}}
+  </g>
+  <!-- Slot de equipamento pescoço -->
+  <g id="equip_neck">
+    {{svg_neck}}
+  </g>
+</svg>
+    • Substitua placeholders via servidor (ex.: Mustache) ou gere on-chain compondo strings.
+6.5 Geração on-chain (opcional)
+    • Armazenar o genoma no token e renderizar SVG dentro de tokenURI:
+    • Retorno de data:application/json;base64 com o campo image como data:image/svg+xml;base64,...
+    •     Retorno de data:application/json;base64 com o campo image como data:image/svg+xml;base64,...
+    • Retorno de data:application/json;base64 com o campo image como data:image/svg+xml;base64,...
+    • Custo de gás aumenta; considere armazenar apenas parâmetros e usar servidor confiável para a imagem.
+7. Planilhas e exportações (CSV prontos)
+7.1 Hunts (CSV)
+Código
+hunt_id,level_min,level_max,phase,monster,qty,xp_each,drop_primary,drop_p_chance,drop_secondary,drop_s_chance
+H1,1,3,1,Formiga,2,1,Comida Crua Comum,0.8,Materiais Comuns,0.2
+H1,1,3,2,Formiga,2,1,Comida Crua Comum,0.8,Materiais Comuns,0.2
+H1,1,3,2,Formiga do Bundão,1,2,Materiais Comuns,0.6,Consumível Comum,0.4
+H1,1,3,3,Rainha Formiga,1,5,Blueprint Comum,0.2,Materiais Raros,0.8
+7.2 Drops por tier (CSV)
+Código
+tier,blueprint,consumivel_raro,consumivel_comum,materiais_raros,materiais_comuns,equip_comum
+1,0.05,0.10,0.35,0.10,0.35,0.05
+2,0.08,0.12,0.30,0.15,0.30,0.05
+3,0.12,0.15,0.25,0.20,0.25,0.03
+4,0.15,0.18,0.20,0.25,0.20,0.02
+7.3 Consumíveis (CSV)
+Código
+item,efeito,raridade,origem,cooldown
+Pocao Cura Comum,+30% Vida,Comum,Predadores/Craft,600
+Pocao Cura Rara,Vida total + DEF 5min,Raro,Chefes,600
+Energetico Natural,+20% Energia,Comum,Craft,600
+Tonico Energia Raro,+50% Energia + VEL 3min,Raro,Chefes/Eventos,600
+Kit Medico Completo,Vida total + 50% Energia,Epico,Evento,3600
+8. Checklists e próximos passos
+8.1 Balanceamento
+    • [ ] Validar metas de tempo por nível com simulação (runs/hora).
+    • [ ] Ajustar r_E, r_F, r_V e r_{V+} conforme telemetria.
+    • [ ] Revisar caps ATK/DEF/VEL e impacto de equipamentos.
+8.2 Conteúdo
+    • [ ] Expandir Hunts H1–H20 para H50, mantendo tiers e diversidade.
+    • [ ] Completar banco de blueprints e receitas épicas/lendárias.
+    • [ ] Definir paletas adicionais e variações de padrões.
+8.3 Blockchain
+    • [ ] Escolher rede (Polygon/Base) e configurar contratos.
+    • [ ] Integrar VRF para breeding e loot épico.
+    • [ ] Implementar royalties (EIP-2981) e freeze de metadata quando necessário.
+8.4 Cliente/Servidor
+    • [ ] Implementar render dinâmica de SVG (server) e cache.
+    • [ ] Autoridade de jogo (anti-cheat) para energia/fome/XP.
+    • [ ] Telemetria: taxa de vitória, itens/hora, burn rate.
+
+🌍 Lore — A História do Mundo dos Sapos
+Muito antes de qualquer jogador cruzar as águas e pântanos deste mundo, havia apenas A Lagoa Eterna — uma nascente de águas cristalinas no coração de um bosque que tocava todos os biomas. Dela surgiram os Primeiros Sapos, guardiões elementais que moldaram a terra, o clima e a fauna à sua volta.
+Com o tempo, esses guardiões espalharam-se e geraram linhagens adaptadas a cada ambiente: desertos secos, picos gelados, vulcões ativos, florestas sombrias. Cada linhagem desenvolveu cores, padrões e habilidades únicas para sobreviver.
+Mas algo mudou: A Sombra do Nevoeiro — um fenômeno misterioso que começou a corromper habitats, mutar criaturas e espalhar instabilidade. O papel dos jogadores é simples e grandioso: explorar, defender e restaurar equilíbrio, fortalecendo seus sapos através de caçadas, alianças e descobertas.
+🗺 Mapa-Múndi — Regiões e Biomas
+    • Lagoa Eterna (Zona Inicial)
+    • Local seguro e ponto de partida dos jogadores.
+    • Acesso ao Plaza, Mercado e áreas de treino.
+    •     Local seguro e ponto de partida dos jogadores.
+    •     Acesso ao Plaza, Mercado e áreas de treino.
+    • Local seguro e ponto de partida dos jogadores.
+    • Acesso ao Plaza, Mercado e áreas de treino.
+    • Campos Verdejantes
+    • Primeiro bioma de Hunts fáceis.
+    • Presas simples como formigas e insetos.
+    •     Primeiro bioma de Hunts fáceis.
+    •     Presas simples como formigas e insetos.
+    • Primeiro bioma de Hunts fáceis.
+    • Presas simples como formigas e insetos.
+    • Lago dos Girinos
+    • Zona aquática com criaturas jovens e rápidas.
+    • Fonte inicial de comida aquática e consumíveis de energia.
+    •     Zona aquática com criaturas jovens e rápidas.
+    •     Fonte inicial de comida aquática e consumíveis de energia.
+    • Zona aquática com criaturas jovens e rápidas.
+    • Fonte inicial de comida aquática e consumíveis de energia.
+    • Pântano Nebuloso
+    • Ambientes úmidos, visão reduzida.
+    • Predadores perigosos, loot mais valioso.
+    •     Ambientes úmidos, visão reduzida.
+    •     Predadores perigosos, loot mais valioso.
+    • Ambientes úmidos, visão reduzida.
+    • Predadores perigosos, loot mais valioso.
+    • Floresta Sombria
+    • Cobertura densa, ideal para encontros PvP opt-in.
+    • Monstros voadores e terrestres se alternam.
+    •     Cobertura densa, ideal para encontros PvP opt-in.
+    •     Monstros voadores e terrestres se alternam.
+    • Cobertura densa, ideal para encontros PvP opt-in.
+    • Monstros voadores e terrestres se alternam.
+    • Montanha Rochosa / Cavernas de Cristal
+    • Hunts de média/alta dificuldade, loot de craft avançado.
+    • Presença de chefes guardiões minerais.
+    •     Hunts de média/alta dificuldade, loot de craft avançado.
+    •     Presença de chefes guardiões minerais.
+    • Hunts de média/alta dificuldade, loot de craft avançado.
+    • Presença de chefes guardiões minerais.
+    • Desertos e Desertos Negros
+    • Ambientes extremos, fome e sede mais rápidas.
+    • Loot raro de pedras e minerais especiais.
+    •     Ambientes extremos, fome e sede mais rápidas.
+    •     Loot raro de pedras e minerais especiais.
+    • Ambientes extremos, fome e sede mais rápidas.
+    • Loot raro de pedras e minerais especiais.
+    • Vulcão Ativo
+    • Áreas de risco elevado; inimigos de fogo.
+    • Fonte de materiais de lava para crafting lendário.
+    •     Áreas de risco elevado; inimigos de fogo.
+    •     Fonte de materiais de lava para crafting lendário.
+    • Áreas de risco elevado; inimigos de fogo.
+    • Fonte de materiais de lava para crafting lendário.
+    • Penhascos Ventosos / Congelados
+    • Desafios verticais, monstros aéreos e raros.
+    •     Desafios verticais, monstros aéreos e raros.
+    • Desafios verticais, monstros aéreos e raros.
+    • Selvas e Florestas Antigas
+    • Biomas densos, inimigos ágeis e eventos ricos.
+    •     Biomas densos, inimigos ágeis e eventos ricos.
+    • Biomas densos, inimigos ágeis e eventos ricos.
+    • Campos Congelados / Geleiras
+    • Hunts de frio intenso; recursos raros para equipamentos térmicos.
+    •     Hunts de frio intenso; recursos raros para equipamentos térmicos.
+    • Hunts de frio intenso; recursos raros para equipamentos térmicos.
+    • Ruínas Afundadas / Catedral Submersa
+    • Ambientes subaquáticos de alta dificuldade.
+    •     Ambientes subaquáticos de alta dificuldade.
+    • Ambientes subaquáticos de alta dificuldade.
+    • Vale do Crepúsculo
+    • Cenário crepuscular, inimigos únicos.
+    •     Cenário crepuscular, inimigos únicos.
+    • Cenário crepuscular, inimigos únicos.
+    • Trono dos Ancestrais (Zona Final)
+    • O covil do Rei Ancestral, chefe supremo.
+    • Eventos finais e loot lendário.
+    •     O covil do Rei Ancestral, chefe supremo.
+    •     Eventos finais e loot lendário.
+    • O covil do Rei Ancestral, chefe supremo.
+    • Eventos finais e loot lendário.
+🔮 Facções e Personagens
+    • Conselho dos Anuros — sábios que regem a Lagoa Eterna e orientam novos jogadores.
+    • Os Mercadores de Casco — nômades que aparecem em eventos e vendem itens raros.
+    • Guardas do Nevoeiro — elite de combate focada em defender biomas corrompidos.
+    • O Rei Ancestral — última barreira, guardião corrompido que decide o destino do mundo.
+
+🗺 Mapa Visual – Mundo dos Sapos (descrição para guia artístico)
+Formato sugerido: mapa circular em estilo “storybook” visto de cima, dividido em biomas conectados por rios, trilhas e portais naturais. O centro é a Lagoa Eterna, e a partir dela, em anéis ou setores, se distribuem os biomas na ordem de progressão.
+Layout:
+    • Centro: Lagoa Eterna (Plaza, Mercado, Conselho dos Anuros)
+    • Norte: Campos Congelados → Penhascos Congelados → Geleira Ancestral
+    • Sul: Selva Antiga → Vale do Crepúsculo → Trono dos Ancestrais
+    • Leste: Pântano Nebuloso → Floresta Sombria → Montanha Rochosa → Cavernas de Cristal
+    • Oeste: Campos Verdejantes → Lago dos Girinos → Deserto Escaldante → Vulcão Ativo
+    • Elementos de conexão:
+    • Pontes de troncos entre zonas de floresta
+    • Gôndolas improvisadas ligando biomas aquáticos
+    • Portais de pedra nas áreas de chefes lendários
+    •     Pontes de troncos entre zonas de floresta
+    •     Gôndolas improvisadas ligando biomas aquáticos
+    •     Portais de pedra nas áreas de chefes lendários
+    • Pontes de troncos entre zonas de floresta
+    • Gôndolas improvisadas ligando biomas aquáticos
+    • Portais de pedra nas áreas de chefes lendários
+📜 Fichas de Facções e Personagens
+Conselho dos Anuros
+    • Função: liderança espiritual e administrativa da Lagoa Eterna.
+    • Visual: três sapos anciões com cores que representam os elementos primários (água, terra, vento).
+    • Papel no jogo: NPCs de tutoriais, missões de história e validação de conquistas importantes.
+Os Mercadores de Casco
+    • Função: comerciantes nômades que surgem em eventos aleatórios nas Hunts e no Plaza.
+    • Visual: tartarugas antropomórficas carregando pequenas barracas nas costas.
+    • Papel no jogo: venda de itens raros, consumíveis especiais, cosméticos.
+Guardas do Nevoeiro
+    • Função: defensores das fronteiras dos biomas corrompidos.
+    • Visual: sapos equipados com armaduras leves, adornos tribais e marcas de guerra.
+    • Papel no jogo: dão missões de combate e “limpeza” de áreas críticas.
+Rei Ancestral
+    • Função: chefe final, líder original corrompido pela Sombra do Nevoeiro.
+    • Visual: sapo colossal com armadura orgânica, olhos brilhantes e padrões distorcidos.
+    • Papel no jogo: missão final de história, dropa loot lendário e itens únicos.
+🎯 Sugestão de Estilo de Arte para o Mapa
+    • Cores: vivas, saturadas, com transições suaves entre biomas.
+    • Detalhes: incluir miniaturas dos chefes nas áreas-chave.
+    • Tipografia: letras orgânicas, com curvas inspiradas em juncos e plantas aquáticas.
+    • Escala: suficiente para identificar rotas e áreas, mas com estilo ilustrado, não topográfico.
+
+🎭 Capítulo de Abertura — “O Chamado da Lagoa”
+Cena 1 — Chegada
+    • Tela abre com uma vista aérea da Lagoa Eterna sob o sol nascente.
+    • Música suave de cordas e sons de água.
+    • Texto narrado:
+Controle liberado: jogador movimenta seu primeiro sapo (🆓 Grátis) pelo pequeno cais.
+🐸 NPC Inicial: Ancião Verdeton
+    • Aparência: sapo idoso, pele verde‑musgo, cajado de bambu.
+    • Diálogo:
+    • Missão 1 – “Primeira Caça”
+    • Objetivo: entrar em uma Hunt de nível 1–3 (Colônia das Formigas).
+    • Recompensa: comida crua + 10 XP.
+    • Tutorial de energia/fome/vida.
+    •     Objetivo: entrar em uma Hunt de nível 1–3 (Colônia das Formigas).
+    •     Recompensa: comida crua + 10 XP.
+    •     Tutorial de energia/fome/vida.
+    • Objetivo: entrar em uma Hunt de nível 1–3 (Colônia das Formigas).
+    • Recompensa: comida crua + 10 XP.
+    • Tutorial de energia/fome/vida.
+🛶 NPC Secundário: Mestre Cinturão
+    • Aparência: sapo de barriga dourada e faixa trançada.
+    • Função: ensinar habilidades (skills).
+    • Missão 2 – “Aprenda a Defender”
+    • Objetivo: vencer uma fase usando ao menos 1 habilidade de defesa.
+    • Recompensa: 1 poção de cura comum.
+    •     Objetivo: vencer uma fase usando ao menos 1 habilidade de defesa.
+    •     Recompensa: 1 poção de cura comum.
+    • Objetivo: vencer uma fase usando ao menos 1 habilidade de defesa.
+    • Recompensa: 1 poção de cura comum.
+🐢 Evento Dinâmico: Visita dos Mercadores de Casco
+    • Ocorre no Plaza após a Missão 1.
+    • Diálogo:
+    • Loja temporária: 3 itens aleatórios (1 consumível, 1 material raro, 1 cosmético não‑NFT).
+📜 Primeiro Arco Narrativo: “Rastro do Nevoeiro”
+Após concluir Hunts H1 e H2:
+    • Cutscene breve mostra Pântano Nebuloso envolto numa névoa estranha.
+    • Ancião Verdeton:
+    • Missão 3 – “Patrulha do Pântano”
+    • Objetivo: concluir H3 com pelo menos 80% de vida restante.
+    • Recompensa: desbloqueia acesso à H4 e ao sistema de trade no Plaza.
+    •     Objetivo: concluir H3 com pelo menos 80% de vida restante.
+    •     Recompensa: desbloqueia acesso à H4 e ao sistema de trade no Plaza.
+    • Objetivo: concluir H3 com pelo menos 80% de vida restante.
+    • Recompensa: desbloqueia acesso à H4 e ao sistema de trade no Plaza.
+🗺 Gancho de Progressão
+Cada facção introduz missões iniciais que:
+    • Levam o jogador a um bioma novo.
+    • Introduzem novas mecânicas (PvP opt‑in, breeding, crafting avançado).
+    • Dão recompensas que ampliam as opções (equipamentos, receitas).
+
+📖 Roteiro Narrativo — Missões Principais
+Arco 1 – Guardião Iniciante (Nível 1–5)
+Objetivo geral: aprender sobrevivência, combate básico e coleta.
+    • O Chamado da Lagoa (tutorial)
+    • NPC: Ancião Verdeton
+    • Caçar na Colônia das Formigas (H1)
+    • Recompensa: comida, 10 XP, desbloqueio crafting básico.
+    •     NPC: Ancião Verdeton
+    •     Caçar na Colônia das Formigas (H1)
+    •     Recompensa: comida, 10 XP, desbloqueio crafting básico.
+    • NPC: Ancião Verdeton
+    • Caçar na Colônia das Formigas (H1)
+    • Recompensa: comida, 10 XP, desbloqueio crafting básico.
+    • Primeiras Defesas
+    • NPC: Mestre Cinturão
+    • Usar habilidade de defesa em Hunt H2
+    • Recompensa: poção de cura comum.
+    •     NPC: Mestre Cinturão
+    •     Usar habilidade de defesa em Hunt H2
+    •     Recompensa: poção de cura comum.
+    • NPC: Mestre Cinturão
+    • Usar habilidade de defesa em Hunt H2
+    • Recompensa: poção de cura comum.
+    • Encontro com os Mercadores
+    • Evento no Plaza (Mercadores de Casco)
+    • Comprar ou trocar por 1 consumível raro.
+    •     Evento no Plaza (Mercadores de Casco)
+    •     Comprar ou trocar por 1 consumível raro.
+    • Evento no Plaza (Mercadores de Casco)
+    • Comprar ou trocar por 1 consumível raro.
+Arco 2 – O Rastro do Nevoeiro (Nível 6–10)
+Objetivo geral: introduzir ameaças mais perigosas e mecânica de eventos.
+    • Patrulha do Pântano
+    • NPC: Guarda do Nevoeiro Tarek
+    • Concluir H3 com ≥ 80% Vida
+    • Recompensa: desbloqueio Floresta Sombria (H4).
+    •     NPC: Guarda do Nevoeiro Tarek
+    •     Concluir H3 com ≥ 80% Vida
+    •     Recompensa: desbloqueio Floresta Sombria (H4).
+    • NPC: Guarda do Nevoeiro Tarek
+    • Concluir H3 com ≥ 80% Vida
+    • Recompensa: desbloqueio Floresta Sombria (H4).
+    • Ventos Inquietos
+    • NPC: Batedora Liliana
+    • Caçar em H9 (Penhascos Ventosos) e vencer Condor.
+    • Recompensa: equipamento costas comum.
+    •     NPC: Batedora Liliana
+    •     Caçar em H9 (Penhascos Ventosos) e vencer Condor.
+    •     Recompensa: equipamento costas comum.
+    • NPC: Batedora Liliana
+    • Caçar em H9 (Penhascos Ventosos) e vencer Condor.
+    • Recompensa: equipamento costas comum.
+Arco 3 – Ecos dos Antigos (Nível 11–20)
+Objetivo geral: preparar o jogador para breeding e crafting avançado.
+    • Cristais e Segredos
+    • NPC: Artesão Pebble
+    • Obter 3 materiais de cristal em H6
+    • Recompensa: blueprint equipamento raro.
+    •     NPC: Artesão Pebble
+    •     Obter 3 materiais de cristal em H6
+    •     Recompensa: blueprint equipamento raro.
+    • NPC: Artesão Pebble
+    • Obter 3 materiais de cristal em H6
+    • Recompensa: blueprint equipamento raro.
+    • Primeiro Breeding
+    • NPC: Ancião Verdeton
+    • Criar um filhote usando qualquer item de suporte.
+    • Recompensa: Essência Evolutiva.
+    •     NPC: Ancião Verdeton
+    •     Criar um filhote usando qualquer item de suporte.
+    •     Recompensa: Essência Evolutiva.
+    • NPC: Ancião Verdeton
+    • Criar um filhote usando qualquer item de suporte.
+    • Recompensa: Essência Evolutiva.
+    • O Calor do Vulcão
+    • NPC: Guarda do Nevoeiro Tarek
+    • Vencer Elemental de Fogo em H8
+    • Recompensa: item de breeding raro.
+    •     NPC: Guarda do Nevoeiro Tarek
+    •     Vencer Elemental de Fogo em H8
+    •     Recompensa: item de breeding raro.
+    • NPC: Guarda do Nevoeiro Tarek
+    • Vencer Elemental de Fogo em H8
+    • Recompensa: item de breeding raro.
+Arco 4 – Sombras e Revelações (Nível 21–30)
+Objetivo geral: desbloquear áreas finais e preparar para o Rei Ancestral.
+    • Ritual nas Rochas Lunares
+    • Evento: Ritual Arcano em H17
+    • Recompensa: blueprint épico.
+    •     Evento: Ritual Arcano em H17
+    •     Recompensa: blueprint épico.
+    • Evento: Ritual Arcano em H17
+    • Recompensa: blueprint épico.
+    • O Vale do Crepúsculo
+    • NPC: Batedora Liliana
+    • Vencer Guardião do Crepúsculo (H18) usando pelo menos 1 buff.
+    • Recompensa: equipamento costas raro.
+    •     NPC: Batedora Liliana
+    •     Vencer Guardião do Crepúsculo (H18) usando pelo menos 1 buff.
+    •     Recompensa: equipamento costas raro.
+    • NPC: Batedora Liliana
+    • Vencer Guardião do Crepúsculo (H18) usando pelo menos 1 buff.
+    • Recompensa: equipamento costas raro.
+    • O Último Conselho
+    • NPCs: Todo o Conselho dos Anuros reunido.
+    • Objetivo: reunir 3 fragmentos ancestrais (drop em H14, H16, H19).
+    • Recompensa: acesso ao H20 — Trono dos Ancestrais.
+    •     NPCs: Todo o Conselho dos Anuros reunido.
+    •     Objetivo: reunir 3 fragmentos ancestrais (drop em H14, H16, H19).
+    •     Recompensa: acesso ao H20 — Trono dos Ancestrais.
+    • NPCs: Todo o Conselho dos Anuros reunido.
+    • Objetivo: reunir 3 fragmentos ancestrais (drop em H14, H16, H19).
+    • Recompensa: acesso ao H20 — Trono dos Ancestrais.
+Arco Final – A Queda do Rei Ancestral
+    • Trono dos Ancestrais (H20)
+    • Derrotar o Rei Ancestral (chefe final).
+    • Loot: equipamento lendário, blueprint lendário, título “Guardião da Lagoa”.
+    •     Derrotar o Rei Ancestral (chefe final).
+    •     Loot: equipamento lendário, blueprint lendário, título “Guardião da Lagoa”.
+    • Derrotar o Rei Ancestral (chefe final).
+    • Loot: equipamento lendário, blueprint lendário, título “Guardião da Lagoa”.
+    • Epílogo – A Calmaria
+    • Cena no Plaza com todos os NPCs.
+    • Fala final do Ancião Verdeton:
+    •     Cena no Plaza com todos os NPCs.
+    •     Fala final do Ancião Verdeton:
+    • Cena no Plaza com todos os NPCs.
+    • Fala final do Ancião Verdeton:
+
+📅 Roadmap Narrativo – Nível 1 a 30
+Nível alvo	NPC responsável	Objetivo narrativo/sistêmico	Local/Conteúdo	Recompensa chave
+1–3	Ancião Verdeton	Concluir primeira Hunt (H1), aprender energia/fome/vida	Colônia das Formigas	Comida crua + 10 XP + crafting básico
+2–4	Mestre Cinturão	Usar habilidade de defesa ao menos 1x	Lago dos Girinos (H2)	Poção de cura comum
+3–5	Mercadores de Casco (evento)	Interagir e negociar com mercador raro	Plaza	Consumível raro
+6–8	Guarda do Nevoeiro Tarek	Concluir H3 com ≥80% Vida	Pântano Nebuloso	Acesso a H4
+7–9	Batedora Liliana	Vencer Condor (H9)	Penhascos Ventosos	Equipamento costas comum
+9–12	Artesão Pebble	Obter 3 materiais de cristal	Cavernas de Cristal (H6)	Blueprint equipamento raro
+10–14	Ancião Verdeton	Realizar 1 breeding com item de suporte	Plaza/Breeding	Essência Evolutiva
+12–16	Guarda Tarek	Vencer Elemental de Fogo	Vulcão Ativo (H8)	Item breeding raro
+21–24	Evento Ritual Arcano	Completar ritual em H17	Cratera Lunar	Blueprint épico
+25–28	Batedora Liliana	Vencer Guardião do Crepúsculo usando buff	Vale do Crepúsculo (H18)	Equipamento costas raro
+27–30	Conselho dos Anuros	Reunir 3 fragmentos ancestrais	H14, H16, H19	Acesso a H20
+30	Rei Ancestral	Derrotar chefe final	Trono dos Ancestrais (H20)	Equipamento lendário + título
+
+🎙 Roteiro de Diálogos – Campanha Principal
+Missão 1 – O Chamado da Lagoa (Ancião Verdeton)
+Cena: Plaza, manhã, câmera em plano aberto mostrando a Lagoa Eterna. Ancião Verdeton: “Ah… um novo guardião surge das águas. O mundo lá fora é vasto, mas também faminto. Venha, vamos começar com algo simples: Formigas.” Tutorial UI: Mostrar barra de Energia/Fome/Vida piscando. Objetivo: Concluir H1. Ao retornar: “Muito bem. Senti firmeza nos seus saltos. Lembre-se: energia gasta é caçada merecida.”
+Missão 2 – Primeiras Defesas (Mestre Cinturão)
+Cena: Pátio de treino no Plaza. Mestre Cinturão: “Força é inútil sem defesa. Quero ver você levantar sua guarda quando a batalha apertar.” Tutorial UI: Destacar botão/comando de habilidade defensiva. Objetivo: Usar uma habilidade de defesa em H2. Conclusão: “Bom. Mais um golpe e sua pele teria sentido. Guarde isso.”
+Evento – Visita dos Mercadores de Casco
+Cena: Música alegre e sinos de vento no Plaza. Mercador: “Trago mercadorias fresquinhas das trilhas! Olhe, toque, barganhe. Mas seja rápido, nada aqui dura muito.” UI: Abrir loja temporária com 3 itens aleatórios.
+Missão 4 – Patrulha do Pântano (Guarda Tarek)
+Cena: Margem do Pântano Nebuloso, névoa densa. Tarek: “Está vendo essa névoa? Cheirinho de problema. Entre e volte vivo, e talvez eu confie em você.” Objetivo: Concluir H3 com ≥80% Vida. Conclusão: “Não é qualquer um que volta sorrindo… e respirando.”
+Missão 5 – Ventos Inquietos (Batedora Liliana)
+Cena: Penhascos Ventosos, rajadas fortes de vento. Liliana: “Aquelas asas no horizonte… são presas ou são caçadores? Só tem um jeito de saber.” Objetivo: Derrotar Condor em H9. Conclusão: “Viu só? Nem todo voo é seguro.”
+Missão 6 – Cristais e Segredos (Artesão Pebble)
+Cena: Oficina iluminada por cristais. Pebble: “Com o brilho certo, até um casco velho parece novo. Me traga alguns cristais e te mostro.” Objetivo: Obter 3 materiais de cristal em H6. Conclusão: “Olhe só… não é só bonito, é resistente.”
+Missão 7 – Primeiro Breeding (Ancião Verdeton)
+Cena: Área de breeding da Lagoa. Ancião: “A vida renova a vida. Está pronto para deixar um legado?” UI: Tutorial de breeding, uso de item de suporte. Conclusão: “Um novo guardião nasceu… cuide bem dele.”
+Missão 8 – O Calor do Vulcão (Tarek)
+Cena: Entrada do Vulcão Ativo, fumaça e brilho de magma. Tarek: “Se não aguenta o calor, não pule na lava. Mas se aguenta… traga a cabeça desse elemental.” Objetivo: Vencer Elemental de Fogo em H8. Conclusão: “Cheiro de enxofre… e de vitória.”
+Missão 9 – Ritual nas Rochas Lunares (Evento)
+Cena: Plataforma iluminada por luar. Guardião Lunar: “A noite pede sacrifício… e coragem.” Objetivo: Completar Ritual Arcano em H17. Conclusão: “A lua sorri para quem ousa.”
+Missão 10 – Vale do Crepúsculo (Liliana)
+Cena: Floresta densa em penumbra. Liliana: “Aqui, as sombras falam… e às vezes mordem. Use algo para se proteger.” Objetivo: Derrotar Guardião do Crepúsculo usando buff. Conclusão: “Ainda está inteiro. É mais do que muitos conseguem.”
+Missão 11 – O Último Conselho (Conselho dos Anuros)
+Cena: Salão iluminado por vitrais aquáticos. Conselho: “Três fragmentos ancestrais mantêm o equilíbrio. Sem eles, nada se mantém de pé.” Objetivo: Obter fragmentos em H14, H16, H19. Conclusão: “As portas para o Trono estão abertas.”
+Missão 12 – Trono dos Ancestrais (Chefe Final)
+Cena: Salão colossal coberto por névoa viva. Rei Ancestral: “Guardião ou ladrão… pouco importa. Hoje, você cai.” Objetivo: Derrotar o Rei Ancestral. Conclusão: Ancião Verdeton: “O nevoeiro recua. O mundo respira. Mas nunca para sempre.”
+
+📑 Tabela de Localização – Missões Principais
+ID	NPC	Contexto	Texto
+M1_INICIO	Ancião Verdeton	Introdução no Plaza	“Ah… um novo guardião surge das águas. O mundo lá fora é vasto, mas também faminto. Venha, vamos começar com algo simples: Formigas.”
+M1_RETORNO	Ancião Verdeton	Após concluir H1	“Muito bem. Senti firmeza nos seus saltos. Lembre-se: energia gasta é caçada merecida.”
+M2_INICIO	Mestre Cinturão	Pátio de treino	“Força é inútil sem defesa. Quero ver você levantar sua guarda quando a batalha apertar.”
+M2_RETORNO	Mestre Cinturão	Após usar defesa em H2	“Bom. Mais um golpe e sua pele teria sentido. Guarde isso.”
+EVT_MERCADOR	Mercador de Casco	Evento no Plaza	“Trago mercadorias fresquinhas das trilhas! Olhe, toque, barganhe. Mas seja rápido, nada aqui dura muito.”
+M4_INICIO	Guarda Tarek	Margem do Pântano Nebuloso	“Está vendo essa névoa? Cheirinho de problema. Entre e volte vivo, e talvez eu confie em você.”
+M4_RETORNO	Guarda Tarek	Após H3 ≥80% Vida	“Não é qualquer um que volta sorrindo… e respirando.”
+M5_INICIO	Batedora Liliana	Penhascos Ventosos	“Aquelas asas no horizonte… são presas ou são caçadores? Só tem um jeito de saber.”
+M5_RETORNO	Batedora Liliana	Após derrotar Condor	“Viu só? Nem todo voo é seguro.”
+M6_INICIO	Artesão Pebble	Oficina de cristais	“Com o brilho certo, até um casco velho parece novo. Me traga alguns cristais e te mostro.”
+M6_RETORNO	Artesão Pebble	Após obter cristais	“Olhe só… não é só bonito, é resistente.”
+M7_INICIO	Ancião Verdeton	Área de breeding	“A vida renova a vida. Está pronto para deixar um legado?”
+M7_RETORNO	Ancião Verdeton	Após breeding	“Um novo guardião nasceu… cuide bem dele.”
+M8_INICIO	Guarda Tarek	Vulcão Ativo	“Se não aguenta o calor, não pule na lava. Mas se aguenta… traga a cabeça desse elemental.”
+M8_RETORNO	Guarda Tarek	Após vencer Elemental de Fogo	“Cheiro de enxofre… e de vitória.”
+M9_INICIO	Guardião Lunar	Ritual Arcano	“A noite pede sacrifício… e coragem.”
+M9_RETORNO	Guardião Lunar	Após completar Ritual	“A lua sorri para quem ousa.”
+M10_INICIO	Batedora Liliana	Vale do Crepúsculo	“Aqui, as sombras falam… e às vezes mordem. Use algo para se proteger.”
+M10_RETORNO	Batedora Liliana	Após vencer Guardião do Crepúsculo	“Ainda está inteiro. É mais do que muitos conseguem.”
+M11_INICIO	Conselho dos Anuros	Salão principal	“Três fragmentos ancestrais mantêm o equilíbrio. Sem eles, nada se mantém de pé.”
+M11_RETORNO	Conselho dos Anuros	Após obter fragmentos	“As portas para o Trono estão abertas.”
+M12_INICIO	Rei Ancestral	Trono dos Ancestrais	“Guardião ou ladrão… pouco importa. Hoje, você cai.”
+M12_EPILOGO	Ancião Verdeton	Após vitória final	
+
+🗨 Variações de Fala por Desempenho
+Missão 1 – O Chamado da Lagoa (Ancião Verdeton)
+    • Retorno perfeito (Vida cheia, sem consumo de cura):
+    • Retorno ferido:
+Missão 2 – Primeiras Defesas (Mestre Cinturão)
+    • Defendeu na hora certa:
+    • Defendeu tarde:
+Patrulha do Pântano (Guarda Tarek)
+    • Volta com ≥90% Vida:
+    • Volta abaixo de 50% Vida:
+Ventos Inquietos (Batedora Liliana)
+    • Vence rápido:
+    • Demora para vencer:
+Cristais e Segredos (Artesão Pebble)
+    • Traz cristal extra:
+    • Traz só o necessário:
+Primeiro Breeding (Ancião Verdeton)
+    • Filhote nasce com 2 skills:
+    • Filhote nasce sem skills:
+O Calor do Vulcão (Tarek)
+    • Derrota o chefe rápido:
+    • Volta queimado (vida baixa):
+Ritual nas Rochas Lunares
+    • Completa sem levar dano:
+    • Quase falha:
+Vale do Crepúsculo
+    • Usa buff com maestria:
+    • Esquece o buff:
+O Último Conselho
+    • Entrega os fragmentos rápido:
+    • Demora várias Hunts:
+Trono dos Ancestrais
+    • Vence com vida alta:
+    • Vence por pouco:
+
+📑 Tabela de Localização Dinâmica – Campanha Principal
+ID	NPC	Contexto	Condição de disparo	Texto
+M1_RETORNO_OK	Ancião Verdeton	Após H1	Vida cheia, nenhum consumível usado	“Vejo que as águas te escolheram bem. Nem um arranhão… digno de nota.”
+M1_RETORNO_DANO	Ancião Verdeton	Após H1	Vida < 100%	“Hmmm… a formiga mordeu mais do que devia, não? Vai aprender a não subestimar.”
+M2_RETORNO_PERF	Mestre Cinturão	Após H2	Defesa acionada no momento certo	“Isso é reflexo de guardião. Vai viver mais assim.”
+M2_RETORNO_TARDE	Mestre Cinturão	Após H2	Defesa acionada tardiamente	“Chegou a levantar, mas foi quase depois do tombo. Ainda falta treino.”
+M4_RETORNO_ALTA	Guarda Tarek	Após H3	Vida ≥ 90%	“Sabe se esquivar… e sabe quando morder de volta. Gosto disso.”
+M4_RETORNO_BAIXA	Guarda Tarek	Após H3	Vida < 50%	“Voltou, mas quase que não. O pântano guarda rancor.”
+M5_RETORNO_RAPIDO	Batedora Liliana	Após H9	Batalha < tempo médio esperado	“Cortou o vento e foi direto ao alvo. Impressionante.”
+M5_RETORNO_LENTO	Batedora Liliana	Após H9	Batalha ≥ tempo médio esperado	“Chegou lá… mas parece que o vento brincou com você primeiro.”
+M6_RETORNO_EXTRA	Artesão Pebble	Após H6	Traz mais cristais que o solicitado	“Olhe só… trouxe até mais do que pedi. Isso é zelo.”
+M6_RETORNO_NECESS	Artesão Pebble	Após H6	Traz somente o necessário	“Cumpriu a lista, nada mais nada menos. Direto ao ponto.”
+M7_RETORNO_TOP	Ancião Verdeton	Após breeding	Filhote nasce com 2 skills	“Os ventos sopram a seu favor. Esse pequeno já nasceu especial.”
+M7_RETORNO_SEM	Ancião Verdeton	Após breeding	Filhote nasce sem skills	“Nem sempre o rio traz o peixe que queremos, mas sempre traz algo vivo.”
+M8_RETORNO_RAPIDO	Guarda Tarek	Após H8	Batalha curta contra chefe	“E nem precisou se esconder das chamas… ou quase.”
+M8_RETORNO_QUEIMADO	Guarda Tarek	Após H8	Vida baixa ao retornar	“Senti cheiro de sapo grelhado chegando. Ainda bem que só queimou de leve.”
+M9_RETORNO_LIMPO	Guardião Lunar	Após H17	Sem levar dano	“As estrelas devem gostar de você… ou você é muito rápido.”
+M9_RETORNO_APERTO	Guardião Lunar	Após H17	Vitória com Vida < 40%	“O luar brilhou por um triz. Sorte e coragem andam juntas.”
+M10_RETORNO_BUFF	Batedora Liliana	Após H18	Buff usado corretamente	“Foi como ver um raio cortar as sombras. Belo trabalho.”
+M10_RETORNO_SEMBUFF	Batedora Liliana	Após H18	Buff não usado	“Eu disse para usar algo… mas pelo menos voltou inteiro.”
+M11_RETORNO_RAPIDO	Conselho dos Anuros	Após fragmentos	Entrega em tempo curto	“Mal pedimos e já voltou. A pressa também é uma arma.”
+M11_RETORNO_LENTO	Conselho dos Anuros	Após fragmentos	Muitas Hunts para completar	“Trouxe o que pedimos. Espero que o caminho tenha valido a pena.”
+M12_RETORNO_FORTE	Ancião Verdeton	Após H20	Vitória com Vida alta	“O rei caiu… e você sequer se curvou.”
+M12_RETORNO_SOFRIDO	Ancião Verdeton	Após H20	Vitória com Vida muito baixa	“O mundo respira… e você quase não.”
+
+🔧 Tabela Técnica – Condições de Disparo de Diálogo
+ID	Evento do jogo	Condição em código/engine	Ação
+M1_RETORNO_OK	OnHuntComplete(H1)	player.health == player.maxHealth && consumiveisUsados == 0	exibirFala("Vejo que as águas te escolheram...")
+M1_RETORNO_DANO	OnHuntComplete(H1)	player.health < player.maxHealth	exibirFala("Hmmm… a formiga mordeu...")
+M2_RETORNO_PERF	OnSkillUse(defesa) + OnHuntComplete(H2)	defesa.usadaNoMomentoCerto == true	exibirFala("Isso é reflexo...")
+M2_RETORNO_TARDE	OnSkillUse(defesa) + OnHuntComplete(H2)	defesa.usadaAtrasada == true	exibirFala("Chegou a levantar...")
+M4_RETORNO_ALTA	OnHuntComplete(H3)	player.healthPercent >= 0.90	exibirFala("Sabe se esquivar...")
+M4_RETORNO_BAIXA	OnHuntComplete(H3)	player.healthPercent < 0.50	exibirFala("Voltou, mas quase...")
+M5_RETORNO_RAPIDO	OnHuntComplete(H9)	tempoCombate < tempoMedio[H9]	exibirFala("Cortou o vento...")
+M5_RETORNO_LENTO	OnHuntComplete(H9)	tempoCombate >= tempoMedio[H9]	exibirFala("Chegou lá...")
+M6_RETORNO_EXTRA	OnHuntComplete(H6)	cristaisColetados > cristaisNecessarios	exibirFala("Olhe só... trouxe até mais...")
+M6_RETORNO_NECESS	OnHuntComplete(H6)	cristaisColetados == cristaisNecessarios	exibirFala("Cumpriu a lista...")
+M7_RETORNO_TOP	OnBreedingComplete	filhote.skills == 2	exibirFala("Os ventos sopram...")
+M7_RETORNO_SEM	OnBreedingComplete	filhote.skills == 0	exibirFala("Nem sempre o rio traz...")
+M8_RETORNO_RAPIDO	OnHuntComplete(H8)	tempoCombate < tempoMedio[H8]	exibirFala("E nem precisou...")
+M8_RETORNO_QUEIMADO	OnHuntComplete(H8)	player.healthPercent < 0.40	exibirFala("Senti cheiro de sapo...")
+M9_RETORNO_LIMPO	OnHuntComplete(H17)	danoRecebido == 0	exibirFala("As estrelas devem gostar...")
+M9_RETORNO_APERTO	OnHuntComplete(H17)	player.healthPercent < 0.40	exibirFala("O luar brilhou por um triz...")
+M10_RETORNO_BUFF	OnHuntComplete(H18)	buffUsadoCorretamente == true	exibirFala("Foi como ver um raio...")
+M10_RETORNO_SEMBUFF	OnHuntComplete(H18)	buffUsadoCorretamente == false	exibirFala("Eu disse para usar...")
+M11_RETORNO_RAPIDO	OnItensEntregues(fragmentosAncestrais)	tempoEntrega < tempoMedioEntrega	exibirFala("Mal pedimos e já voltou...")
+M11_RETORNO_LENTO	OnItensEntregues(fragmentosAncestrais)	tempoEntrega >= tempoMedioEntrega	exibirFala("Trouxe o que pedimos...")
+M12_RETORNO_FORTE	OnBossDefeated(ReiAncestral)	player.healthPercent >= 0.80	exibirFala("O rei caiu...")
+M12_RETORNO_SOFRIDO	OnBossDefeated(ReiAncestral)	player.healthPercent < 0.30	exibirFala("O mundo respira...")
+
+Aqui vai um modelo genérico que o time pode encaixar em qualquer framework/web‑engine (Phaser, PixiJS, Babylon, Unity WebGL, etc.):
+javascript
+// Estrutura: cada fala tem ID, condição e texto
+const falas = [
+  {
+    id: "M1_RETORNO_OK",
+    condicao: (ctx) => ctx.huntId === "H1" && ctx.health === ctx.maxHealth && ctx.consumiveisUsados === 0,
+    texto: "Vejo que as águas te escolheram bem. Nem um arranhão… digno de nota."
+  },
+  {
+    id: "M1_RETORNO_DANO",
+    condicao: (ctx) => ctx.huntId === "H1" && ctx.health < ctx.maxHealth,
+    texto: "Hmmm… a formiga mordeu mais do que devia, não? Vai aprender a não subestimar."
+  },
+  // ... inserir todas as demais falas aqui
+];
+
+// Dispatcher genérico
+function exibirFala(evento, contexto) {
+  // Filtra por evento, checa condições e retorna o texto da primeira que bater
+  const fala = falas.find(f => f.condicao(contexto));
+  if (fala) {
+    mostrarNaUI(fala.texto);
+  }
+}
+
+// Exemplo de uso: quando uma hunt termina
+game.on("huntComplete", (dados) => {
+  const contexto = {
+    huntId: dados.huntId,
+    health: player.health,
+    maxHealth: player.maxHealth,
+    healthPercent: player.health / player.maxHealth,
+    consumiveisUsados: player.stats.consumiveisUsados,
+    tempoCombate: dados.tempoCombate,
+    tempoMedio: dados.tempoMedio,
+    buffUsadoCorretamente: dados.buffOK,
+    danoRecebido: dados.danoRecebido,
+    cristaisColetados: dados.cristaisColetados,
+    cristaisNecessarios: dados.cristaisNecessarios,
+    filhote: dados.filhote || null,
+    tempoEntrega: dados.tempoEntrega,
+    tempoMedioEntrega: dados.tempoMedioEntrega
+  };
+  
+  exibirFala("huntComplete", contexto);
+});
+
+function mostrarNaUI(texto) {
+  // Aqui entra a lógica da UI — pode ser uma caixa de diálogo, balão acima do NPC, etc.
+  console.log(`NPC diz: ${texto}`);
+}
+🔹 Pontos‑chave para web:
+    • Contexto: é o pacote de dados que seu front vai receber do jogo/servidor ao final de cada evento.
+    • Condicoes: são funções puras que avaliam se aquela fala deve ser usada.
+    • mostrarNaUI: você pluga no sistema de HUD/diálogo que já tiver (caixa, balão, overlay).
+💡 A grande vantagem desse formato é que o mesmo JSON/array de falas que definimos também serve para localização: basta trocar o campo texto por traduções sem alterar o código.
+
+
+Protocolo de Armazenamento e Uso da Carteira Owner/Tesouro
+A carteira Owner/Tesouro concentra as funções administrativas de todos os contratos (ERC‑20, ERC‑1155 e marketplace) e recebe 100% das taxas e receitas do jogo. Para garantir máxima segurança, o acesso e a custódia desta carteira seguem o protocolo abaixo:
+Armazenamento
+    • Keystore (.json): armazenado em pendrive dedicado (cold storage), protegido por senha forte.
+    • Seed phrase (24 palavras): registrada em suporte físico (papel resistente ou metal) e mantida em local físico distinto do pendrive.
+    • Senha do Keystore: guardada separadamente da seed e do pendrive, preferencialmente memorizada ou em backup seguro criptografado.
+Operação
+    • A carteira Owner/Tesouro nunca é importada permanentemente em dispositivos conectados à internet.
+    • Para qualquer operação:
+        1. Utilizar PC temporariamente offline para assinar transações.
+        2. Importar o Keystore ou a seed apenas para o tempo necessário.
+        3. Executar a assinatura (deploy, alteração de parâmetros críticos ou movimentação de grandes valores).
+        4. Remover a conta do software de carteira e ejetar o pendrive.
+        5. Reconectar o PC à internet somente após a limpeza.
+Hot Wallets
+    • Todas as operações diárias e transações comuns do jogo devem ser realizadas por carteiras operacionais (hot wallets) sem permissões administrativas.
+    • As hot wallets mantêm apenas o saldo necessário para operação imediata.
+Backup & Recuperação
+    • Em caso de perda do pendrive, utilizar a seed phrase para restaurar a carteira em ambiente seguro e gerar novo Keystore.
+    • Em caso de perda da seed phrase, utilizar o Keystore e senha para recuperar acesso.
+Observação: O protocolo é obrigatório para qualquer pessoa que, no futuro, venha a ter acesso administrativo, garantindo a integridade financeira e operacional do ecossistema Mundo dos Sapos.
+

@@ -1,0 +1,350 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/*
+  SapoEquip1155
+  - ERC1155 minimal otimizado
+  - Mint/Burn controlados (owner/minters)
+  - Equip/Unequip com escrow (itens em uso ficam no contrato)
+  - Integração com FrogNFT (valida dono do sapo)
+  - Integração opcional com SuperRegistry para registro de “veículos”
+*/
+
+interface IFrogNFT {
+    function ownerOf(uint256 id) external view returns (address);
+}
+
+interface IERC1155Receiver {
+    function onERC1155Received(
+        address operator, address from, uint256 id, uint256 value, bytes calldata data
+    ) external returns (bytes4);
+    function onERC1155BatchReceived(
+        address operator, address from, uint256[] calldata ids, uint256[] calldata values, bytes calldata data
+    ) external returns (bytes4);
+}
+
+interface ISuperRegVehicles {
+    function registerVehicle(
+        uint256 itemId,
+        address owner_,
+        bytes32 plateHash,
+        uint64  expiry
+    ) external;
+}
+
+contract SapoEquip1155 {
+    // Errors
+    error ErrAuth();
+    error ErrPaused();
+    error ErrZero();
+    error ErrLen();
+    error ErrBal();
+    error ErrSlot();
+    error ErrOwn();
+    error ErrRole();
+    error ErrFrozen();
+
+    // ─── Core ───
+    address public owner;
+    address public pendingOwner;
+    bool    public paused;
+    uint256 private _reent;
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert ErrAuth();
+        _;
+    }
+    modifier whenNotPaused() {
+        if (paused) revert ErrPaused();
+        _;
+    }
+    modifier nonReentrant() {
+        if (_reent == 1) revert ErrAuth();
+        _reent = 1;
+        _;
+        _reent = 0;
+    }
+
+    event OwnershipTransferStarted(address from,address to);
+    event OwnershipTransferred(address from,address to);
+    event Paused(address by);
+    event Unpaused(address by);
+
+    constructor(address _owner, address _frogs, address _registry) {
+        if (_owner == address(0) || _frogs == address(0)) revert ErrZero();
+        owner    = _owner;
+        frogs    = IFrogNFT(_frogs);
+        registry = _registry;
+    }
+
+    function transferOwnership(address to) external onlyOwner {
+        if (to == address(0)) revert ErrZero();
+        pendingOwner = to;
+        emit OwnershipTransferStarted(owner, to);
+    }
+    function acceptOwnership() external {
+        if (msg.sender != pendingOwner) revert ErrAuth();
+        address old = owner;
+        owner = pendingOwner;
+        pendingOwner = address(0);
+        emit OwnershipTransferred(old, owner);
+    }
+    function pause()   external onlyOwner { paused = true;  emit Paused(msg.sender); }
+    function unpause() external onlyOwner { paused = false; emit Unpaused(msg.sender); }
+
+    // ─── ERC1155 minimal ───
+    mapping(uint256 => mapping(address => uint256)) private _balances;
+    mapping(address => mapping(address => bool)) private _operatorApprovals;
+
+    event TransferSingle(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 id,
+        uint256 value
+    );
+    event TransferBatch(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256[] ids,
+        uint256[] values
+    );
+    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+    event URI(string value, uint256 indexed id);
+
+    function balanceOf(address account, uint256 id) public view returns (uint256) {
+        return _balances[id][account];
+    }
+    function balanceOfBatch(address[] calldata accounts, uint256[] calldata ids)
+        external view returns (uint256[] memory)
+    {
+        if (accounts.length != ids.length) revert ErrLen();
+        uint256[] memory batch = new uint256[](accounts.length);
+        for (uint256 i = 0; i < accounts.length; i++) {
+            batch[i] = _balances[ids[i]][accounts[i]];
+        }
+        return batch;
+    }
+    function setApprovalForAll(address operator, bool approved)
+        external whenNotPaused
+    {
+        _operatorApprovals[msg.sender][operator] = approved;
+        emit ApprovalForAll(msg.sender, operator, approved);
+    }
+    function isApprovedForAll(address account, address operator)
+        public view returns (bool)
+    {
+        return _operatorApprovals[account][operator];
+    }
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) public whenNotPaused nonReentrant {
+        if (from != msg.sender && !isApprovedForAll(from, msg.sender)) revert ErrAuth();
+        _safeTransfer(from, to, id, amount, data);
+    }
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
+    ) external whenNotPaused nonReentrant {
+        if (from != msg.sender && !isApprovedForAll(from, msg.sender)) revert ErrAuth();
+        if (ids.length != amounts.length) revert ErrLen();
+        for (uint256 i = 0; i < ids.length; i++) {
+            _safeTransfer(from, to, ids[i], amounts[i], data);
+        }
+        emit TransferBatch(msg.sender, from, to, ids, amounts);
+    }
+
+    function _safeTransfer(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) internal {
+        if (to == address(0)) revert ErrZero();
+        uint256 bal = _balances[id][from];
+        if (bal < amount) revert ErrBal();
+        unchecked { _balances[id][from] = bal - amount; }
+        _balances[id][to] += amount;
+        emit TransferSingle(msg.sender, from, to, id, amount);
+        _checkERC1155Received(from, to, id, amount, data);
+    }
+
+    function _checkERC1155Received(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) private {
+        if (to.code.length == 0) return;
+        try IERC1155Receiver(to).onERC1155Received(msg.sender, from, id, amount, data)
+            returns (bytes4 retval)
+        {
+            if (retval != IERC1155Receiver.onERC1155Received.selector) revert ErrAuth();
+        } catch {
+            revert ErrAuth();
+        }
+    }
+
+    // ─── Mint / Burn ───
+    mapping(address => bool) public isMinter;
+    event MinterSet(address indexed minter, bool ok);
+    event Minted(address indexed to, uint256 id, uint256 amount);
+    event Burned(address indexed from, uint256 id, uint256 amount);
+
+    function setMinter(address m, bool ok) external onlyOwner {
+        if (m == address(0)) revert ErrZero();
+        isMinter[m] = ok;
+        emit MinterSet(m, ok);
+    }
+    function mintTo(
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes calldata data
+    ) external whenNotPaused nonReentrant {
+        if (!(msg.sender == owner || isMinter[msg.sender])) revert ErrRole();
+        if (to == address(0) || amount == 0) revert ErrZero();
+        _balances[id][to] += amount;
+        emit TransferSingle(msg.sender, address(0), to, id, amount);
+        _checkERC1155Received(address(0), to, id, amount, data);
+        emit Minted(to, id, amount);
+    }
+    function burnFrom(address from, uint256 id, uint256 amount)
+        external whenNotPaused nonReentrant
+    {
+        if (from != msg.sender && !isApprovedForAll(from, msg.sender)) revert ErrAuth();
+        uint256 bal = _balances[id][from];
+        if (bal < amount) revert ErrBal();
+        unchecked { _balances[id][from] = bal - amount; }
+        emit TransferSingle(msg.sender, from, address(0), id, amount);
+        emit Burned(from, id, amount);
+    }
+
+    // ─── Metadata ───
+    string private _baseURI;
+    bool   public metadataFrozen;
+
+    event BaseURISet(string uri);
+    event MetadataFrozen();
+
+    function setBaseURI(string calldata uri) external onlyOwner {
+        if (metadataFrozen) revert ErrFrozen();
+        _baseURI = uri;
+        emit BaseURISet(uri);
+    }
+    function freezeMetadata() external onlyOwner {
+        metadataFrozen = true;
+        emit MetadataFrozen();
+    }
+    function uri(uint256 id) external view returns (string memory) {
+        return string(abi.encodePacked(_baseURI, _toString(id)));
+    }
+
+    function _toString(uint256 v) internal pure returns (string memory) {
+        if (v == 0) return "0";
+        uint256 temp = v;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (v != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(v % 10)));
+            v /= 10;
+        }
+        return string(buffer);
+    }
+
+    // ─── Equip/Escrow ───
+    IFrogNFT public frogs;
+    address public registry;
+
+    enum Slot { None, Neck, Back, Head, Body }
+
+    mapping(uint256 => Slot) public itemSlot;
+    mapping(uint256 => mapping(Slot => uint256)) public equippedItem;
+
+    event ItemMetaSet(uint256 indexed id, Slot slot);
+    event Equipped(uint256 indexed frogId, Slot slot, uint256 indexed itemId);
+    event Unequipped(uint256 indexed frogId, Slot slot, uint256 indexed itemId);
+
+    function setItemMeta(uint256 id, Slot slot) external onlyOwner {
+        if (slot == Slot.None) revert ErrSlot();
+        itemSlot[id] = slot;
+        emit ItemMetaSet(id, slot);
+    }
+
+    function equip(uint256 frogId, uint256 itemId) external whenNotPaused nonReentrant {
+        Slot slot = itemSlot[itemId];
+        if (slot == Slot.None) revert ErrSlot();
+        if (frogs.ownerOf(frogId) != msg.sender) revert ErrOwn();
+
+        uint256 cur = equippedItem[frogId][slot];
+        if (cur != 0) {
+            _unequipTo(frogId, slot, msg.sender);
+        }
+
+        // transfer item into escrow
+        _safeTransfer(msg.sender, address(this), itemId, 1, "");
+        equippedItem[frogId][slot] = itemId;
+        emit Equipped(frogId, slot, itemId);
+    }
+
+    function unequip(uint256 frogId, Slot slot) external whenNotPaused nonReentrant {
+        if (frogs.ownerOf(frogId) != msg.sender) revert ErrOwn();
+        _unequipTo(frogId, slot, msg.sender);
+    }
+
+    function _unequipTo(uint256 frogId, Slot slot, address to) internal {
+        uint256 itemId = equippedItem[frogId][slot];
+        if (itemId == 0) revert ErrSlot();
+        equippedItem[frogId][slot] = 0;
+        _safeTransfer(address(this), to, itemId, 1, "");
+        emit Unequipped(frogId, slot, itemId);
+    }
+
+    // ─── Registro de veículos ───
+    event VehicleRegistered(uint256 itemId, address owner, bytes32 plateHash, uint64 expiry);
+
+    function registerVehicle(
+        uint256 itemId,
+        address owner_,
+        bytes32 plateHash,
+        uint64  expiry
+    ) external onlyOwner {
+        if (registry != address(0)) {
+            (bool ok,) = registry.call(
+                abi.encodeWithSelector(
+                    ISuperRegVehicles.registerVehicle.selector,
+                    itemId, owner_, plateHash, expiry
+                )
+            );
+            require(ok, "regVehicle");
+        }
+        emit VehicleRegistered(itemId, owner_, plateHash, expiry);
+    }
+
+    // ─── ERC1155 Receiver ───
+    function onERC1155Received(
+        address, address, uint256, uint256, bytes calldata
+    ) external pure returns (bytes4) {
+        return IERC1155Receiver.onERC1155Received.selector;
+    }
+    function onERC1155BatchReceived(
+        address, address, uint256[] calldata, uint256[] calldata, bytes calldata
+    ) external pure returns (bytes4) {
+        return IERC1155Receiver.onERC1155BatchReceived.selector;
+    }
+}
